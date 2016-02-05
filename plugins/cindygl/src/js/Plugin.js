@@ -21,12 +21,12 @@ createCindy.registerPlugin(1, "CindyGL", function(api) {
   /**
    * argument canvaswrapper is optional. If it is not given, it will render on glcanvas
    */
-  function compileAndRender(prog, a, b, width, height, canvaswrapper) {
+  function compileAndRender(prog, a, b, width, height, name, canvaswrapper) {
     if (!prog.iscompiled || prog.compiletime < requiredcompiletime) {
       //console.log("Program is not compiled. So we will do that");
       prog.iscompiled = true; //Note we are adding attributes to the parsed cindyJS-Code tree
       prog.compiletime = requiredcompiletime;
-      prog.renderer = new Renderer(api, prog);
+      prog.renderer = new Renderer(api, prog, name);
     }
     /*else {
          console.log("Program has been compiled; we will use that compiled code.");
@@ -53,7 +53,7 @@ createCindy.registerPlugin(1, "CindyGL", function(api) {
 
     let iw = api.instance['canvas']['width']; //internal measures. might be twice as cw on HiDPI-Displays
     let ih = api.instance['canvas']['height'];
-    
+
     let m = api.getInitialMatrix();
     let transf = function(px, py) { //copied from Operators.js
       var xx = px - m.tx;
@@ -66,7 +66,7 @@ createCindy.registerPlugin(1, "CindyGL", function(api) {
       };
       return erg;
     };
-    compileAndRender(prog, transf(0, ch), transf(cw, ch), iw, ih, null);
+    compileAndRender(prog, transf(0, ch), transf(cw, ch), iw, ih, "output", null);
     let csctx = api.instance['canvas'].getContext('2d');
     csctx.drawImage(glcanvas, 0, 0, iw, ih, 0, 0, cw, ch);
     return nada;
@@ -100,7 +100,7 @@ createCindy.registerPlugin(1, "CindyGL", function(api) {
       canvaswrappers[name.value] = new CanvasWrapper(localcanvas);
     }
 
-    compileAndRender(prog, a, b, cw, ch, canvaswrappers[name.value]);
+    compileAndRender(prog, a, b, cw, ch, name.value, canvaswrappers[name.value]);
 
     return nada;
   });
@@ -116,6 +116,13 @@ createCindy.registerPlugin(1, "CindyGL", function(api) {
     if (isFinite(x) && isFinite(y) && name && canvaswrappers.hasOwnProperty(name) && color) {
       canvaswrappers[name].setPixel(x, y, color);
     }
+    return nada;
+  });
+
+  api.defineFunction("drawdiagram", 1, function(args, modifs) {
+
+    var name = coerce.toString(api.evaluateAndVal(args[0]));
+    drawDiagram(name);
     return nada;
   });
 

@@ -2,13 +2,21 @@
  * param {TODO} expression for the Code that will be used for rendering
  * @constructor
  */
-function Renderer(api, expression) {
+function Renderer(api, expression, name) {
   this.api = api;
 
   let cb = new CodeBuilder(api);
+  console.log("Compiling program for " + name + "...");
   let cpg = cb.generateColorPlotProgram(expression);
   this.cpguniforms = cpg.uniforms;
   this.requiredtextures = cpg.requiredtextures;
+
+
+  //add edges
+  for (let t = 0; t < this.requiredtextures.length; t++) {
+    let tname = this.requiredtextures[t];
+    addEdge(name, tname);
+  }
 
   this.fragmentShaderCode =
     cgl_resources["standardFragmentHeader"] + cpg.code;
@@ -229,6 +237,7 @@ Renderer.prototype.render = function(a, b, sizeX, sizeY, canvaswrapper) {
   this.setTransformMatrix(a, b, c);
   this.setUniforms();
   this.loadTextures();
+
 
   if (canvaswrapper)
     canvaswrapper.bindFramebuffer(); //render to texture stored in canvaswrapper

@@ -12,7 +12,7 @@ td.EventManager;
 //////////////////////////////////////////////////////////////////////
 // Externs for CindyJS bindings
 
-function createCindy() { }
+function createCindy() {}
 
 /** @typedef {{ctype:string}} */
 createCindy.anyval;
@@ -47,3 +47,36 @@ createCindy.pluginApi;
  * @param {function(createCindy.pluginApi)} initCallback
  */
 createCindy.registerPlugin;
+
+var dagre = {
+  "graphlib": {
+    "Graph": function() {},
+    "json": {
+      "write": function() {},
+      "read": function() {}
+    },
+    "alg": {
+      "components": function() {},
+      "dijkstra": function() {},
+      "dijkstraAll": function() {},
+      "findCycles": function() {},
+      "floydWarshall": function() {},
+      "isAcyclic": function() {},
+      "postorder": function() {},
+      "preorder": function() {},
+      "prim": function() {},
+      "tarjan": function() {},
+      "topsort": function() {}
+    },
+    "version": {}
+  },
+  "layout": function() {},
+  "debug": {
+    "debugOrdering": function() {}
+  },
+  "util": {
+    "time": function() {},
+    "notime": function() {}
+  },
+  "version": {}
+}

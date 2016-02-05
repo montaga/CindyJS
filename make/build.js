@@ -315,7 +315,8 @@ module.exports = function build(settings, task) {
         "IncludeFunctions",
         "CodeBuilder",
         "TextureReader",
-        "WebGLImplementation"
+        "WebGLImplementation",
+        "Diagram"
     ];
 
     var cgl_mods_from_c3d = [
