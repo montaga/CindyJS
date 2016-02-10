@@ -68,6 +68,7 @@ function drawDiagram(v0) {
    // c.height = g['_label']['height'];
     c.width = layouted["width"];
     c.height = layouted["height"];
+    c.style = "width: " + layouted["width"]/2 + "px; height: " + layouted["height"]/2 + "px";
     document.body.appendChild(c);
 
     precompdone = true;
@@ -82,21 +83,22 @@ function drawDiagram(v0) {
 
 
   function drawcurve(points) {
+    if(points.length<=1) return;
     // move to the first point
     ctx.strokeStyle = "#000000";
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
-    let i = 1;
-    for (; i < points.length - 2; i++) {
-      var xc = (points[i].x + points[i + 1].x) / 2;
-      var yc = (points[i].y + points[i + 1].y) / 2;
-      ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+    let i = 0;
+    for (; i < points.length - 1; i++) {
+      ctx.moveTo(points[i].x, points[i].y);
+      ctx.lineTo(points[i + 1].x, points[i + 1].y);
     }
     // curve through the last two points
-    ctx.quadraticCurveTo(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+    //ctx.lineTo(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+    i = i-1;
 
 
-    var headlen = 10; // length of head in pixels
+    var headlen = 20; // length of head in pixels
     var angle = Math.atan2(points[i + 1].y - points[i].y, points[i + 1].x - points[i].x);
     ctx.moveTo(points[i + 1].x, points[i + 1].y);
     ctx.lineTo(points[i + 1].x - headlen * Math.cos(angle - Math.PI / 6), points[i + 1].y - headlen * Math.sin(angle - Math.PI / 6));
@@ -113,7 +115,9 @@ function drawDiagram(v0) {
       let v = layouted["children"][idx];
       canvaswrappers[v["id"]].drawTo(ctx, v['x'], v['y']);
 
-      ctx.fillStyle = "#000080";
+      ctx.fillStyle = "#000000";
+      
+      ctx.font = '15pt Sans Serif';
       ctx.fillText(v["id"], v['x'], v['y']);
     }
     
@@ -122,14 +126,15 @@ function drawDiagram(v0) {
       let e = layouted["edges"][idx];
       //console.log(JSON.stringify(e));
       if(!e.p1){
-        let p = Array.prototype.concat(Array.prototype.concat([e["sourcePoint"]], e["bendPoints"]),[e["targetPoint"]]);
-        e.p1 = [];
-        for(let j in p) {
-          e.p1[j] = {x : p[j]["x"], y: p[j]["y"]};
-        }
+        let p = [e["sourcePoint"]];
+        if(e["bendPoints"])
+          p = p.concat(e["bendPoints"]);
+        p = p.concat([e["targetPoint"]]);
+        //let p = Array.prototype.concat(Array.prototype.concat([e["sourcePoint"]], e["bendPoints"]),[e["targetPoint"]]);
+        e.p1 = p.map( function(pt) {return {x : pt["x"], y: pt["y"]}} );
+        
       }
-        //p1 = p.map( pt => {x : pt["x"], y: pt["y"]} );
-        drawcurve(e.p1);
+      drawcurve(e.p1);
     }
   /*
     g['nodes']().forEach(function(name) {
