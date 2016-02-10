@@ -80,3 +80,11 @@ var dagre = {
   },
   "version": {}
 }
+
+var $klay = {
+  "layout": function() {}
+};
+
+var klay = {
+  "layout": function() {}
+};

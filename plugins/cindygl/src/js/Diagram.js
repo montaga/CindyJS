@@ -12,34 +12,42 @@ var precompdone = false;
 var vis = {};
 
 // Create a new directed graph 
-var g = new dagre.graphlib.Graph();
+//var g = new dagre.graphlib.Graph();
 
+var graph = {"id": "root",
+      "properties": {
+        "direction": "LEFT",
+     //   "spacing": 10
+      },
+      "children": [],
+      "edges": []
+    }
+var layouted;
 
 function drawDiagram(v0) {
   if (!precompdone) {
 
 
-    // Set an object for the graph label
-    g['setGraph']({'rankdir': 'RL'});
-
-    // Default to assigning a new object as a label for each new edge.
-    g['setDefaultEdgeLabel'](function() {
-      return {};
-    });
-
-
-
     function dfs(a) {
       if (vis[a]) return;
       vis[a] = true;
+      graph["children"].push(
+        {
+          "id": a,
+          "width": canvaswrappers[a].sizeX,
+          "height": canvaswrappers[a].sizeY
+        }
+        );
+         
+        
+        
       for (let b in adj[a]) {
         dfs(b);
-        g['setNode'](a, {
-          label: a,
-          width: canvaswrappers[a].sizeX,
-          height: canvaswrappers[a].sizeY
+        graph["edges"].push({
+          "id": "e" + a + b,
+          "source": a,
+          "target": b
         });
-        g['setEdge'](a, b);
         console.log("added edge " + a + " -> " + b);
       }
     }
@@ -47,14 +55,19 @@ function drawDiagram(v0) {
     dfs(v0);
 
 
-    dagre.layout(g);
-
+    $klay.layout({
+      "graph": graph,
+      "options": {  },
+      "success": function(l) { layouted = l; console.log(layouted); },
+      "error": function(error) { console.log(error); }
+    });
 
     var c = document.createElement("canvas");
     c.id = "diagramcanvas";
-    c.width = g['_label']['width'];
-    c.height = g['_label']['height'];
-
+   // c.width = g['_label']['width'];
+   // c.height = g['_label']['height'];
+    c.width = layouted["width"];
+    c.height = layouted["height"];
     document.body.appendChild(c);
 
     precompdone = true;
@@ -93,21 +106,45 @@ function drawDiagram(v0) {
 
     ctx.stroke();
   };
+  
+  if(layouted) {
+  
+    for(let idx in layouted["children"]) {
+      let v = layouted["children"][idx];
+      canvaswrappers[v["id"]].drawTo(ctx, v['x'], v['y']);
 
-  g['nodes']().forEach(function(name) {
-    var v = g['node'](name);
-    /* ctx.fillStyle = "#AAAAAA";
-     ctx.fillRect(v.x-v.width/2,v.y-v.height/2,v.width,v.height);
-     */
-    canvaswrappers[name].drawTo(ctx, v.x - v.width / 2, v.y - v.height / 2);
+      ctx.fillStyle = "#000080";
+      ctx.fillText(v["id"], v['x'], v['y']);
+    }
+    
+    
+    for(let idx in layouted["edges"]) {
+      let e = layouted["edges"][idx];
+      //console.log(JSON.stringify(e));
+      if(!e.p1){
+        let p = Array.prototype.concat(Array.prototype.concat([e["sourcePoint"]], e["bendPoints"]),[e["targetPoint"]]);
+        e.p1 = [];
+        for(let j in p) {
+          e.p1[j] = {x : p[j]["x"], y: p[j]["y"]};
+        }
+      }
+        //p1 = p.map( pt => {x : pt["x"], y: pt["y"]} );
+        drawcurve(e.p1);
+    }
+  /*
+    g['nodes']().forEach(function(name) {
+      var v = g['node'](name);
+      canvaswrappers[name].drawTo(ctx, v.x - v.width / 2, v.y - v.height / 2);
 
-    ctx.fillStyle = "#000080";
-    ctx.fillText(v.label, v.x, v.y);
-  });
+      ctx.fillStyle = "#000080";
+      ctx.fillText(v.label, v.x, v.y);
+    });
 
-  g['edges']().forEach(function(name) {
-    var e = g['edge'](name);
-    drawcurve(e['points']);
-  });
+    g['edges']().forEach(function(name) {
+      var e = g['edge'](name);
+      drawcurve(e['points']);
+    });
+    */
+  }
 }
 
