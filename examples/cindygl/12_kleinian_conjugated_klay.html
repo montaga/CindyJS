@@ -22,15 +22,15 @@
     <script id="csinit" type="text/x-cindyscript">
       use("CindyGL");
       
-      createimage("A", 256, 256); //last trafo
-      createimage("a", 256, 256);
-      createimage("B", 256, 256);
-      createimage("b", 256, 256);
-      createimage("C", 256, 256);
-      createimage("c", 256, 256);
+      createimage("A", 512, 512); //last trafo
+      createimage("a", 512, 512);
+      createimage("B", 512, 512);
+      createimage("b", 512, 512);
+      createimage("C", 512, 512);
+      createimage("c", 512, 512);
       
-      createimage("conjugatedoutput", 256, 256);
-      createimage("output", 256, 256);
+      createimage("conjugatedoutput", 512, 512);
+      createimage("output", 512, 512);
       
       colorplot([-pi, -pi], [pi, -pi], "A", 0.1); //initialize with some fog
       colorplot([-pi, -pi], [pi, -pi], "a", 0.1);
@@ -189,8 +189,8 @@
                     autoplay: true,
                     ports: [{
                       id: "CSCanvas",
-                      width: 256,
-                      height: 128,
+                      width: 512,
+                      height: 256,
                       transform: [ { visibleRect: [0, 0, 8, 4] } ]
                     }]
                   });
