@@ -676,7 +676,7 @@ CodeBuilder.prototype.compile = function(expr, scope, generateTerm) {
       if (fname === 'regional')
         return (generateTerm ? {
           term: '',
-          type: voidt,
+          type: type.voidt,
           code: ''
         } : {
           code: ''
