@@ -1,4 +1,5 @@
 function useimagergba4(args, codebuilder) {
+		//console.error("got image " + JSON.stringify(args[2]) + " that can be evaluated to " + JSON.stringify(codebuilder.api.evaluateAndVal(args[2])));
   let name = args[2];
 
   if (codebuilder.api.getImage(name, true) == null) {

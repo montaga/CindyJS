@@ -320,7 +320,7 @@ webgltr["ceil"] = [
 webgltr["mod"] = [
   [int_fun$2, useinfix('%')],
   [float_fun$2, usefunction('mod')],
-  //[complex_fun$2, useincludefunction('modc')]
+  [complex_fun$2, usefunction('mod')] // alternativly: implement useincludefunction('modc'), see https://github.com/CindyJS/CindyJS/issues/272
 ];
 
 webgltr["random"] = [

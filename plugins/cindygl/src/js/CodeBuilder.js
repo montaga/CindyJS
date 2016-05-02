@@ -507,11 +507,11 @@ CodeBuilder.prototype.compile = function(expr, scope, generateTerm) {
     let uniforms = this.uniforms;
 
 
-    let type = uniforms[uname].type;
+    let ctype = uniforms[uname].type;
     return generateTerm ? {
       code: '',
-      term: uname,
-      type: type
+      term: (ctype != type.string) ? uname : this.api.evaluateAndVal(this.uniforms[uname].expr)['value'], //copy strings directly into the code with their current value
+      type: ctype
     } : {
       code: ''
     };
@@ -705,7 +705,7 @@ CodeBuilder.prototype.compile = function(expr, scope, generateTerm) {
       }
       if (termGenerator === nada) {
         console.error("There is no webgl-implementation for " + fname + '(' + signature.args.map(typeToString).join(', ') + ').\n' +
-          'defualt: Try glsl-function with same name'
+          'default: Try glsl-function with same name'
         );
         termGenerator = (args => fname + '(' + args.join(', ') + ')');
       }
@@ -846,7 +846,7 @@ CodeBuilder.prototype.compileFunction = function(fname, nargs) {
 
 CodeBuilder.prototype.generateListOfUniforms = function() {
   let ans = [];
-  for (let uname in this.uniforms)
+  for (let uname in this.uniforms) if(this.uniforms[uname].type!=type.string)
     ans.push('uniform ' + webgltype[this.uniforms[uname].type] + ' ' + uname + ';');
   return ans.join('\n');
 };
