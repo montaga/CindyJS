@@ -31,7 +31,6 @@ createCindy.registerPlugin(1, "CindyGL", function(api) {
     /*else {
          console.log("Program has been compiled; we will use that compiled code.");
     }*/
-    updateBeforeRendering.forEach(f => f());
     prog.renderer.render(a, b, width, height, canvaswrapper);
   }
 
@@ -56,10 +55,10 @@ createCindy.registerPlugin(1, "CindyGL", function(api) {
     let ih = api.instance['canvas']['height'];
 
     compileAndRender(prog, computeLowerLeftCorner(api), computeLowerRightCorner(api), iw, ih, null);
-    let csctx = api.instance['canvas'].getContext('2d');    
+    let csctx = api.instance['canvas'].getContext('2d');
     csctx.drawImage(glcanvas, 0, 0, iw, ih, 0, 0, cw, ch);
-    
-    
+
+
     return nada;
   });
 

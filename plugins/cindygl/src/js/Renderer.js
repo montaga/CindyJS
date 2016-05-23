@@ -200,6 +200,7 @@ Renderer.prototype.loadTextures = function() {
 
     let tname = this.texturereaders[t].name;
     let cw = this.texturereaders[t].canvaswrapper;
+    cw.reloadIfRequired();
     cw.bindTexture();
     this.shaderProgram.uniform['_sampler' + tname]([cnt]);
     this.shaderProgram.uniform['_ratio' + tname]([cw.sizeX / cw.sizeY]);
@@ -228,16 +229,17 @@ Renderer.prototype.render = function(a, b, sizeX, sizeY, canvaswrapper) {
   if (canvaswrapper)
     gl.viewport(0, 0, sizeX, sizeY);
   else
-    gl.viewport(0, glcanvas.height-sizeY, sizeX, sizeY);
+    gl.viewport(0, glcanvas.height - sizeY, sizeX, sizeY);
 
   this.shaderProgram.use(gl);
   this.setTransformMatrix(a, b, c);
   this.setUniforms();
   this.loadTextures();
 
-  if (canvaswrapper)
+  if (canvaswrapper) {
     canvaswrapper.bindFramebuffer(); //render to texture stored in canvaswrapper
-  else
+    canvaswrapper.canvas.img['copiedToCindyGL'] = true;
+  } else
     gl.bindFramebuffer(gl.FRAMEBUFFER, null); //render to glcanvas
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   gl.flush(); //renders stuff to canvaswrapper
