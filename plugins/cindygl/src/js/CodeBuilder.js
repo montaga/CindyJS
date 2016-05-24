@@ -423,14 +423,28 @@ CodeBuilder.prototype.determineUniforms = function(expr) {
 
       //nothing to pass
       if (expr['ctype'] === 'void') return;
+						
+						//check whether uniform with same expression has already been generated. Note this causes O(n^2) running time :/ One might use a hashmap if it becomes relevant
+      let found = false;
+      let uname;
+      for (let otheruname in uniforms)
+        if (!found) {
+          if (expressionsAreEqual(expr, uniforms[otheruname].expr)) {
+            found = true;
+            uname = otheruname;
+          }
+        }
+      if (!found) {
+        uname = generateUniqueHelperString();
+        uniforms[uname] = {
+          expr: expr,
+          type: nada
+        };
+      }
 
-      let uname = generateUniqueHelperString();
       expr["isuniform"] = true;
       expr["uvariable"] = uname;
-      uniforms[uname] = {
-        expr: expr,
-        type: nada
-      };
+
     }
   }
 

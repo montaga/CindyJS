@@ -4,7 +4,7 @@
 
 
 /**
- * clones expression while ignoring  pointer-references to the same child
+ * clones expression while ignoring pointer-references to the same child
  */
 function cloneExpression(obj) {
   var copy;
@@ -46,6 +46,43 @@ function cloneExpression(obj) {
     return copy;
   }
 }
+
+/**
+ * checks recursively whether two expressions are equal
+ */
+function expressionsAreEqual(a, b) {
+  if (null == a || "object" != typeof a) return a === b;
+  if (a instanceof Array && b instanceof Array) {
+    if (a.length != b.length) return false;
+    for (var i = 0, len = a.length; i < len; i++) {
+      if (!expressionsAreEqual(a[i], b[i])) return false;
+    }
+    return true;
+  } else if (a instanceof Object && b instanceof Object) {
+    let l = ['oper',
+      'impl',
+      'args',
+      'ctype',
+      'stack',
+      'name',
+      'modifs',
+      'arglist',
+      'value',
+      'real',
+      'imag',
+      'key',
+      'obj',
+      'body'
+    ]
+    for (let i = 0; i < l.length; i++) {
+      let attr = l[i];
+      if (!expressionsAreEqual(a[attr], b[attr])) return false;
+    }
+    return true;
+  }
+  return false;
+}
+
 
 
 function isprimitive(a) {
