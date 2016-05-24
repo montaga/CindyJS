@@ -445,14 +445,6 @@ webgltr["%"] = [
 
 webgltr["imagergb"] = [
   [{
-    args: [type.string, type.coordinate2d],
-    res: type.vec3
-  }, useimagergb2],
-  [{
-    args: [type.coordinate2d, type.coordinate2d, type.string, type.coordinate2d],
-    res: type.vec3
-  }, useimagergb4],
-  [{
     args: [type.image, type.coordinate2d],
     res: type.vec3
   }, useimagergb2],
@@ -461,15 +453,8 @@ webgltr["imagergb"] = [
     res: type.vec3
   }, useimagergb4]
 ];
+
 webgltr["imagergba"] = [
-  [{
-    args: [type.string, type.coordinate2d],
-    res: type.vec4
-  }, useimagergba2],
-  [{
-    args: [type.coordinate2d, type.coordinate2d, type.string, type.coordinate2d],
-    res: type.vec4
-  }, useimagergba4],
   [{
     args: [type.image, type.coordinate2d],
     res: type.vec4
