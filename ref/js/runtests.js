@@ -370,6 +370,7 @@ FakeCanvas.prototype.measureText = function(txt) {
   "stroke",
   "strokeText",
   "fillText",
+  "setTransform",
 ].forEach(function(m) {
   FakeCanvas.prototype[m] = function() {
     this.writeLog(m, arguments);
