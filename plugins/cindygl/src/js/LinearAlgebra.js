@@ -65,6 +65,26 @@ function generatematmult(t, modifs, codebuilder) {
         '}');
 }
 
+function generatesum(t, modifs, codebuilder) {
+  if(isnativeglsl(t)) return;
+  let n = t.length;
+    let name = `sum${webgltype(t)}`;
+    let accessor = isrvectorspace(t.type) ? accessvecbyshifted : iscvectorspace(t.type) ? accesscvecbyshifted :
+        console.error('Accessing this kind of lists not implemented yet');
+        
+    codebuilder.add('functions', name, () =>  `${webgltype(t.parameters)} ${name}(${webgltype(t)} a){` +
+      `${webgltype(t.parameters)} res; //TODO: init with 0
+      ${
+        range(n).map(k =>
+          useadd(t.parameters)(['res',
+          accessor(t.length, k)(['a',k], modifs, codebuilder)
+        ],modifs,codebuilder)
+        ).join('\n')
+      }
+        return res;
+    }`);
+}
+
 function generatecmatmult(t, modifs, codebuilder) {
   let n = t.length;
   let m = t.parameters.length;
@@ -168,14 +188,15 @@ function useadd(t) {
   else return (args, modifs, codebuilder) => generateadd(t, modifs, codebuilder) || `add${webgltype(t)}(${args.join(',')})`;
 }
 
-function usesum(t) {
-  if(isnativeglsl(t)) return useinfix('+');
-  else return (args, modifs, codebuilder) => generateadd(t, modifs, codebuilder) || `add${webgltype(t)}(${args.join(',')})`;
-}
-
 function usesub(t) {
   if(isnativeglsl(t)) return useinfix('-');
   else return (args, modifs, codebuilder) => generatesub(t, modifs, codebuilder) || `sub${webgltype(t)}(${args.join(',')})`;
+}
+
+function usesum(t) {
+  if(isrvectorspace(t) && depth(t)==1) return (args, modifs, codebuilder) => usedot(t.length)(
+    [args[0], usevec(t.length)(Array(t.length).fill('1.'), modifs, codebuilder)], modifs, codebuilder);
+  else return (args, modifs, codebuilder) => generatesum(t, modifs, codebuilder) || `sum${webgltype(t)}(${args.join(',')})`;
 }
   
 function usevec(n) {

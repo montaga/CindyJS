@@ -190,13 +190,14 @@ CodeBuilder.prototype.determineVariables = function(expr, bindings) {
     //dfs over executed code
     function rec(expr, bindings, scope) {
         expr.bindings = bindings;
-        bindings = (expr['oper'] === "repeat$2") ? addvar(bindings, '#', type.int) :
-            (expr['oper'] === "repeat$3") ? addvar(bindings, expr['args'][1]['name'], type.int) :
-            (expr['oper'] === "forall$2" || expr['oper'] === "apply$2") ? addvar(bindings, '#', false) :
-            (expr['oper'] === "forall$3" || expr['oper'] === "apply$3") ? addvar(bindings, expr['args'][1]['name'], false) :
-            bindings;
-
-        for (let i in expr['args']) rec(expr['args'][i], bindings, scope);
+        for (let i in expr['args'])
+            rec(expr['args'][i],
+                i >= 1 && (expr['oper'] === "repeat$2") ? addvar(bindings, '#', type.int) :
+                i >= 1 && (expr['oper'] === "repeat$3") ? addvar(bindings, expr['args'][1]['name'], type.int) :
+                i >= 1 && (expr['oper'] === "forall$2" || expr['oper'] === "apply$2") ? addvar(bindings, '#', false) :
+                i >= 1 && (expr['oper'] === "forall$3" || expr['oper'] === "apply$3") ? addvar(bindings, expr['args'][1]['name'], false) :
+                bindings,
+                scope);
         if (expr['ctype'] === 'field') rec(expr['obj'], bindings, scope);
 
         //was there something happening to the (return)variables?
@@ -588,7 +589,7 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
         let sterm = generateUniqueHelperString();
         code += `${webgltype(array.type)} ${sterm} = ${array.term};\n`;
         code += `${webgltype(ittype)} ${it};\n`
-        for (let i = 0; i < array.type.length; i++) { //unroll forall/apply
+        for (let i = 0; i < array.type.length; i++) { //unroll forall/apply because dynamic access of arrays would require branching
             code += `${it} = ${accessor(array.type.length, i)([sterm], [], this)};\n`
             code += r.code;
             if (generateTerm) {

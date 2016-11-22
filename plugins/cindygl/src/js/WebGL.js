@@ -154,7 +154,7 @@ webgl['apply'] = argtypes => (argtypes.length == 2 || argtypes.length == 3) && (
 webgl['sum'] = argtypes => (argtypes.length == 1) && (isrvectorspace(argtypes[0]) || iscvectorspace(argtypes[0])) ? ({
     args: argtypes,
     res: argtypes[0].parameters,
-    generator: args => ''
+    generator: usesum(argtypes[0]),
 }) : false;
 
 webgl['regional'] = argtypes => ({ //generator not used yet
