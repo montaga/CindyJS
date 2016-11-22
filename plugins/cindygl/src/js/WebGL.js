@@ -141,7 +141,7 @@ webgl['repeat'] = argtypes => (argtypes.length == 2 || argtypes.length == 3) && 
 
 webgl['forall'] = argtypes => (argtypes.length == 2 || argtypes.length == 3) && (argtypes[0].type === 'list') ? ({ //generator not used
     args: argtypes,
-    res: argtypes[argtypes.length - 1].parameters,
+    res: argtypes[argtypes.length - 1],
     generator: args => ''
 }) : false;
 

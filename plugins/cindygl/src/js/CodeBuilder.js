@@ -192,8 +192,8 @@ CodeBuilder.prototype.determineVariables = function(expr, bindings) {
         expr.bindings = bindings;
         bindings = (expr['oper'] === "repeat$2") ? addvar(bindings, '#', type.int) :
             (expr['oper'] === "repeat$3") ? addvar(bindings, expr['args'][1]['name'], type.int) :
-            (expr['oper'] === "forall$2" || expr['oper'] === "apply$2") ? addvar(bindings, '#', guessTypeOfValue(self.api.evaluateAndVal(expr['args'][0])).parameters) :
-            (expr['oper'] === "forall$3" || expr['oper'] === "apply$3") ? addvar(bindings, expr['args'][1]['name'], guessTypeOfValue(self.api.evaluateAndVal(expr['args'][0])).parameters) :
+            (expr['oper'] === "forall$2" || expr['oper'] === "apply$2") ? addvar(bindings, '#', false) :
+            (expr['oper'] === "forall$3" || expr['oper'] === "apply$3") ? addvar(bindings, expr['args'][1]['name'], false) :
             bindings;
 
         for (let i in expr['args']) rec(expr['args'][i], bindings, scope);
@@ -216,6 +216,20 @@ CodeBuilder.prototype.determineVariables = function(expr, bindings) {
                 myfunctions[scope].variables.push(iname);
                 self.initvariable(iname, false);
             }
+        } else if (expr['oper'] === "forall$2" || expr['oper'] === "apply$2" || expr['oper'] === "forall$3" || expr['oper'] === "apply$3") {
+            let it = (expr['args'].length === 2) ? expr['args'][1].bindings['#'] : expr['args'][2].bindings[expr['args'][1]['name']];
+            variables[it].assigments.push({ //add function that accesses first element of array for type detection
+                "ctype": "infix",
+                "oper": "_",
+                "args": [expr['args'][0], {
+                    "ctype": "number",
+                    "value": {
+                        "real": 1,
+                        "imag": 0
+                    }
+                }],
+                bindings: expr['args'][0].bindings
+            });
         } else if (expr['ctype'] === 'function' && myfunctions.hasOwnProperty(expr['oper'])) { // call of user defined function
             let rfun = expr['oper'];
             let pname = rfun.replace('$', '_'); //remove $
@@ -529,7 +543,6 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
         let r = this.compile(expr['args'][(expr['oper'] === "repeat$2") ? 1 : 2], generateTerm);
 
         let code = '';
-        let ans = '';
         let ansvar = '';
 
         if (generateTerm) {
@@ -561,7 +574,6 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
         let r = this.compile(expr['args'][(expr['oper'] === "forall$2") ? 1 : 2], generateTerm);
 
         let code = '';
-        let ans = '';
         let ansvar = '';
 
         if (generateTerm) {
@@ -586,12 +598,49 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
         } : {
             code: code
         });
+    } else if (expr['oper'] === "apply$2" || expr['oper'] === "apply$3") {
+        let array = this.compile(expr['args'][0], true);
+        if (array.type.type !== 'list') {
+            console.error('apply only possible for lists');
+            return false;
+        }
+        let it = (expr['oper'] === "apply$2") ? expr['args'][1].bindings['#'] : expr['args'][2].bindings[expr['args'][1]['name']];
+        let ittype = this.variables[it].T;
+
+        let r = this.compile(expr['args'][(expr['oper'] === "apply$2") ? 1 : 2], generateTerm);
+
+        let code = '';
+        let ansvar = '';
+        let ctype = false;
+
+        if (generateTerm) {
+            ctype = list(array.type.length, r.type);
+            ansvar = generateUniqueHelperString();
+            code += `${webgltype(ctype)} ${ansvar};`;
+        }
+        let accessor = isrvectorspace(array.type) ? accessvecbyshifted : iscvectorspace(array.type) ? accesscvecbyshifted :
+            console.error('Accessing this kind of lists not implemented yet');
+        code += `${webgltype(ittype)} ${it};\n`
+        code += array.code;
+        for (let i = 0; i < array.type.length; i++) { //unroll forall
+            code += `${it} = ${accessor(array.type.length, i)([array.term], [], this)};\n`
+            code += r.code;
+            if (generateTerm) {
+                code += `${accessor(array.type.length, i)([ansvar], [], this)} = ${r.term};\n`;
+            }
+        }
+        return (generateTerm ? {
+            code: code,
+            term: ansvar,
+            type: ctype
+        } : {
+            code: code
+        });
     } else if (expr['oper'] === "if$2" || expr['oper'] === "if$3") {
         let cond = this.compile(expr['args'][0], true);
         let ifbranch = this.compile(expr['args'][1], generateTerm);
 
         let code = '';
-        let ans = '';
         let ansvar = '';
 
         let termtype = this.getType(expr);
