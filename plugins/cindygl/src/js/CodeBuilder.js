@@ -177,6 +177,7 @@ CodeBuilder.prototype.determineVariables = function(expr, bindings) {
 
     //clones the a bindings-dict and addes one variable of given type to it
     function addvar(bindings, varname, type) {
+        console.log(`added var ${varname} of type ${typeToString(type)}`);
         let ans = {}; //clone bindings
         for (let i in bindings) ans[i] = bindings[i];
         let ivar = generateUniqueHelperString();
@@ -190,8 +191,15 @@ CodeBuilder.prototype.determineVariables = function(expr, bindings) {
     //dfs over executed code
     function rec(expr, bindings, scope) {
         expr.bindings = bindings;
+
+        if (expr['oper'] === "forall$3") {
+            let tval = self.api.evaluateAndVal(expr['args'][0]);
+            console.log(tval);
+        }
         bindings = (expr['oper'] === "repeat$2") ? addvar(bindings, '#', type.int) :
             (expr['oper'] === "repeat$3") ? addvar(bindings, expr['args'][1]['name'], type.int) :
+            (expr['oper'] === "forall$2" || expr['oper'] === "apply$2") ? addvar(bindings, '#', guessTypeOfValue(self.api.evaluateAndVal(expr['args'][0])).parameters) :
+            (expr['oper'] === "forall$3" || expr['oper'] === "apply$3") ? addvar(bindings, expr['args'][1]['name'], guessTypeOfValue(self.api.evaluateAndVal(expr['args'][0])).parameters) :
             bindings;
 
         for (let i in expr['args']) rec(expr['args'][i], bindings, scope);
@@ -330,12 +338,12 @@ CodeBuilder.prototype.determineUniforms = function(expr) {
         }
 
         //repeat is pixel dependent iff it's code is pixel dependent. Then it also makes the running variable pixel dependent.
-        if (expr['oper'] === "repeat$2") {
+        if (expr['oper'] === "repeat$2" || expr['oper'] === "forall$2" || expr['oper'] === "apply$2") {
             if (dependsOnPixel(expr['args'][1])) {
                 variableDependendsOnPixel[expr['args'][1].bindings['#']] = true;
                 return expr["dependsOnPixel"] = true;
             } else return expr["dependsOnPixel"] = false;
-        } else if (expr['oper'] === "repeat$3") {
+        } else if (expr['oper'] === "repeat$3" || expr['oper'] === "forall$3" || expr['oper'] === "apply$3") {
             if (dependsOnPixel(expr['args'][2])) {
                 variableDependendsOnPixel[expr['args'][2].bindings[expr['args'][1]['name']]] = true;
                 expr['args'][1]["dependsOnPixel"] = true;
@@ -522,9 +530,7 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
             console.error('repeat possible only for fixed constant number in GLSL');
             return false;
         }
-        let it = (expr['oper'] === "repeat$2") ? expr['args'][1].bindings['#'] :
-            expr['args'][2].bindings[expr['args'][1]['name']] //(expr['oper'] === "repeat$3")
-        ;
+        let it = (expr['oper'] === "repeat$2") ? expr['args'][1].bindings['#'] : expr['args'][2].bindings[expr['args'][1]['name']];
         let n = number.term;
         let r = this.compile(expr['args'][(expr['oper'] === "repeat$2") ? 1 : 2], generateTerm);
 
@@ -542,6 +548,44 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
             code += `${ansvar} = ${r.term};\n`;
         }
         code += '}\n';
+        return (generateTerm ? {
+            code: code,
+            term: ansvar,
+            type: r.type
+        } : {
+            code: code
+        });
+    } else if (expr['oper'] === "forall$2" || expr['oper'] === "forall$3") {
+        let array = this.compile(expr['args'][0], true);
+        console.log(array);
+        if (array.type.type !== 'list') {
+            console.error('forall only possible for lists');
+            return false;
+        }
+        let it = (expr['oper'] === "forall$2") ? expr['args'][1].bindings['#'] : expr['args'][2].bindings[expr['args'][1]['name']];
+        let ittype = this.variables[it].T;
+
+        let r = this.compile(expr['args'][(expr['oper'] === "forall$2") ? 1 : 2], generateTerm);
+
+        let code = '';
+        let ans = '';
+        let ansvar = '';
+
+        if (generateTerm) {
+            ansvar = generateUniqueHelperString();
+            code += `${webgltype(r.type)} ${ansvar};`; //initial ansvar
+        }
+        let accessor = isrvectorspace(array.type) ? accessvecbyshifted : iscvectorspace(array.type) ? accesscvecbyshifted :
+            console.error('Accessing this kind of lists not implemented yet');
+        code += `${webgltype(ittype)} ${it};\n`
+        code += array.code;
+        for (let i = 0; i < array.type.length; i++) { //unroll forall
+            code += `${it} = ${accessor(array.type.length, i)([array.term], [], this)};\n`
+            code += r.code;
+            if (generateTerm && i === array.type.length - 1) {
+                code += `${ansvar} = ${r.term};\n`;
+            }
+        }
         return (generateTerm ? {
             code: code,
             term: ansvar,

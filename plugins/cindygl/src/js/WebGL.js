@@ -138,6 +138,20 @@ webgl['repeat'] = argtypes => (argtypes.length == 2 || argtypes.length == 3) && 
     generator: args => ''
 }) : false;
 
+
+webgl['forall'] = argtypes => (argtypes.length == 2 || argtypes.length == 3) && (argtypes[0].type === 'list') ? ({ //generator not used
+    args: argtypes,
+    res: argtypes[argtypes.length - 1].parameters,
+    generator: args => ''
+}) : false;
+
+webgl['apply'] = argtypes => (argtypes.length == 2 || argtypes.length == 3) && (argtypes[0].type === 'list') ? ({ //generator not used
+    args: argtypes,
+    res: list(argtypes[0].length, argtypes[argtypes.length - 1]),
+    generator: args => ''
+}) : false;
+
+
 webgl['regional'] = argtypes => ({ //generator not used yet
     args: argtypes,
     res: type.voidt,
