@@ -175,6 +175,7 @@ function usesub(t) {
   
 function usevec(n) {
     if(2 <= n && n <= 4) return args => `vec${n}(${args.join(',')})`;
+    if(n == 1) return args => `float(${args.join(',')})`;
     let cum = 0;
     return (args, modifs, codebuilder) => createstruct(type.vec(n), codebuilder) ||
         `vec${n}(${
@@ -211,6 +212,8 @@ function accessvecbyshifted(n, k) {
       createstruct(type.vec(n), codebuilder);
       //let k = Number(args[1]) - 1;
       //console.log(`k = ${k};`);
+      if(n == 1)
+          return `(${args[0]})`;
       if(2 <= n && n <= 4)
           return `(${args[0]})[${k}]`;
       let idx = computeidx(k, n);

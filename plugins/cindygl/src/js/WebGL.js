@@ -324,19 +324,29 @@ webgl["_"] = args => {
     let a = args[0];
     if (a.type === 'list' && issubtypeof(a.parameters, type.float) && isconstantint(args[1])) {
         let vectorspace = getrvectorspace(a);
-        return {
-            args: [vectorspace, args[1]],
-            res: type.float,
-            generator: accessvecbyshifted(vectorspace.length, Number(args[1].value["value"]["real"] - 1)),
-        };
+        let k = Number(args[1].value["value"]["real"]);
+        if (1 <= Math.abs(k) && Math.abs(k) <= vectorspace.length) {
+            if (k > 0) k = k - 1;
+            if (k < 0) k = vectorspace.length - k;
+            return {
+                args: [vectorspace, args[1]],
+                res: type.float,
+                generator: accessvecbyshifted(vectorspace.length, k),
+            };
+        }
     }
     if (a.type === 'list' && issubtypeof(a.parameters, type.complex) && isconstantint(args[1])) {
         let vectorspace = getcvectorspace(a);
-        return {
-            args: [vectorspace, args[1]],
-            res: type.complex,
-            generator: accesscvecbyshifted(vectorspace.length, Number(args[1].value["value"]["real"] - 1)),
-        };
+        let k = Number(args[1].value["value"]["real"]);
+        if (1 <= Math.abs(k) && Math.abs(k) <= vectorspace.length) {
+            if (k > 0) k = k - 1;
+            if (k < 0) k = vectorspace.length - k;
+            return {
+                args: [vectorspace, args[1]],
+                res: type.complex,
+                generator: accesscvecbyshifted(vectorspace.length, k),
+            };
+        }
     }
     return false;
 };

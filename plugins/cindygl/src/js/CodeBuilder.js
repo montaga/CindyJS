@@ -177,7 +177,6 @@ CodeBuilder.prototype.determineVariables = function(expr, bindings) {
 
     //clones the a bindings-dict and addes one variable of given type to it
     function addvar(bindings, varname, type) {
-        console.log(`added var ${varname} of type ${typeToString(type)}`);
         let ans = {}; //clone bindings
         for (let i in bindings) ans[i] = bindings[i];
         let ivar = generateUniqueHelperString();
@@ -191,11 +190,6 @@ CodeBuilder.prototype.determineVariables = function(expr, bindings) {
     //dfs over executed code
     function rec(expr, bindings, scope) {
         expr.bindings = bindings;
-
-        if (expr['oper'] === "forall$3") {
-            let tval = self.api.evaluateAndVal(expr['args'][0]);
-            console.log(tval);
-        }
         bindings = (expr['oper'] === "repeat$2") ? addvar(bindings, '#', type.int) :
             (expr['oper'] === "repeat$3") ? addvar(bindings, expr['args'][1]['name'], type.int) :
             (expr['oper'] === "forall$2" || expr['oper'] === "apply$2") ? addvar(bindings, '#', guessTypeOfValue(self.api.evaluateAndVal(expr['args'][0])).parameters) :
@@ -557,7 +551,6 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
         });
     } else if (expr['oper'] === "forall$2" || expr['oper'] === "forall$3") {
         let array = this.compile(expr['args'][0], true);
-        console.log(array);
         if (array.type.type !== 'list') {
             console.error('forall only possible for lists');
             return false;

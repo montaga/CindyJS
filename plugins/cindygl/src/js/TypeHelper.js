@@ -37,7 +37,7 @@ let replaceCbyR = t => t === type.complex ? type.float : {
 /* is t implementented in native glsl, as bool, float, int, vec2, vec3, vec4, mat2, mat3, mat4 */
 let isnativeglsl = t =>
     t === type.bool || t === type.int || t === type.float || t === type.complex ||
-    (t.type === 'list' && t.parameters === type.float && 2 <= t.length && t.length <= 4) ||
+    (t.type === 'list' && t.parameters === type.float && 1 <= t.length && t.length <= 4) ||
     (t.type === 'list' && t.parameters.type === 'list' && t.parameters.parameters === type.float && t.length === t.parameters.length && 2 <= t.length && t.length <= 4);
 
 let isprimitive = a => [type.bool, type.int, type.float, type.complex].indexOf(a) !== -1;
@@ -267,7 +267,9 @@ function webgltype(ctype) {
             return 'vec3';
     }
     if (ctype.type === 'list' && issubtypeof(ctype.parameters, type.float)) {
-        return `vec${ctype.length}`;
+        if (ctype.length == 1) return 'float';
+        else
+            return `vec${ctype.length}`;
     } else if (ctype.type === 'list' && issubtypeof(ctype.parameters, type.complex)) {
         return `cvec${ctype.length}`;
     } else if (ctype.type === 'list' && ctype.parameters.type === 'list' && ctype.length === ctype.parameters.length && issubtypeof(ctype.parameters.parameters, type.float)) {
