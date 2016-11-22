@@ -586,8 +586,11 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
         let accessor = isrvectorspace(array.type) ? accessvecbyshifted : iscvectorspace(array.type) ? accesscvecbyshifted :
             console.error('Accessing this kind of lists not implemented yet');
         code += array.code;
-        let sterm = generateUniqueHelperString();
-        code += `${webgltype(array.type)} ${sterm} = ${array.term};\n`;
+        let sterm = array.term;
+        if (!this.variables[sterm] && !this.uniforms[sterm] && array.type.length>=2) { //evaluate array.term to new variable sterm if it is complicated and used twice
+            sterm = generateUniqueHelperString();
+            code += `${webgltype(array.type)} ${sterm} = ${array.term};\n`;
+        }
         code += `${webgltype(ittype)} ${it};\n`
         for (let i = 0; i < array.type.length; i++) { //unroll forall/apply because dynamic access of arrays would require branching
             code += `${it} = ${accessor(array.type.length, i)([sterm], [], this)};\n`
