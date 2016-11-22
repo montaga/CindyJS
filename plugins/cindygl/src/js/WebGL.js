@@ -151,11 +151,16 @@ webgl['apply'] = argtypes => (argtypes.length == 2 || argtypes.length == 3) && (
     generator: args => ''
 }) : false;
 
+webgl['sum'] = argtypes => (argtypes.length == 1) && (isrvectorspace(argtypes[0]) || iscvectorspace(argtypes[0])) ? ({
+    args: argtypes,
+    res: argtypes[0].parameters,
+    generator: args => ''
+}) : false;
 
 webgl['regional'] = argtypes => ({ //generator not used yet
     args: argtypes,
     res: type.voidt,
-    generator: args => ''
+    generator: usesum(argtypes[0])
 });
 
 webgl["sqrt"] = first([

@@ -562,71 +562,41 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
         } : {
             code: code
         });
-    } else if (expr['oper'] === "forall$2" || expr['oper'] === "forall$3") {
+    } else if (expr['oper'] === "forall$2" || expr['oper'] === "forall$3" || expr['oper'] === "apply$2" || expr['oper'] === "apply$3") {
         let array = this.compile(expr['args'][0], true);
         if (array.type.type !== 'list') {
-            console.error('forall only possible for lists');
+            console.error(`${expr['oper']} only possible for lists`);
             return false;
         }
-        let it = (expr['oper'] === "forall$2") ? expr['args'][1].bindings['#'] : expr['args'][2].bindings[expr['args'][1]['name']];
+        let it = (expr['args'].length === 2) ? expr['args'][1].bindings['#'] : expr['args'][2].bindings[expr['args'][1]['name']];
         let ittype = this.variables[it].T;
 
-        let r = this.compile(expr['args'][(expr['oper'] === "forall$2") ? 1 : 2], generateTerm);
-
-        let code = '';
-        let ansvar = '';
-
-        if (generateTerm) {
-            ansvar = generateUniqueHelperString();
-            code += `${webgltype(r.type)} ${ansvar};`; //initial ansvar
-        }
-        let accessor = isrvectorspace(array.type) ? accessvecbyshifted : iscvectorspace(array.type) ? accesscvecbyshifted :
-            console.error('Accessing this kind of lists not implemented yet');
-        code += `${webgltype(ittype)} ${it};\n`
-        code += array.code;
-        for (let i = 0; i < array.type.length; i++) { //unroll forall
-            code += `${it} = ${accessor(array.type.length, i)([array.term], [], this)};\n`
-            code += r.code;
-            if (generateTerm && i === array.type.length - 1) {
-                code += `${ansvar} = ${r.term};\n`;
-            }
-        }
-        return (generateTerm ? {
-            code: code,
-            term: ansvar,
-            type: r.type
-        } : {
-            code: code
-        });
-    } else if (expr['oper'] === "apply$2" || expr['oper'] === "apply$3") {
-        let array = this.compile(expr['args'][0], true);
-        if (array.type.type !== 'list') {
-            console.error('apply only possible for lists');
-            return false;
-        }
-        let it = (expr['oper'] === "apply$2") ? expr['args'][1].bindings['#'] : expr['args'][2].bindings[expr['args'][1]['name']];
-        let ittype = this.variables[it].T;
-
-        let r = this.compile(expr['args'][(expr['oper'] === "apply$2") ? 1 : 2], generateTerm);
+        let r = this.compile(expr['args'][(expr['args'].length === 2) ? 1 : 2], generateTerm);
 
         let code = '';
         let ansvar = '';
         let ctype = false;
 
         if (generateTerm) {
-            ctype = list(array.type.length, r.type);
+            ctype = (expr['oper'] === "forall$2" || expr['oper'] === "forall$3") ? r.type : list(array.type.length, r.type);
             ansvar = generateUniqueHelperString();
             code += `${webgltype(ctype)} ${ansvar};`;
         }
         let accessor = isrvectorspace(array.type) ? accessvecbyshifted : iscvectorspace(array.type) ? accesscvecbyshifted :
             console.error('Accessing this kind of lists not implemented yet');
-        code += `${webgltype(ittype)} ${it};\n`
         code += array.code;
-        for (let i = 0; i < array.type.length; i++) { //unroll forall
-            code += `${it} = ${accessor(array.type.length, i)([array.term], [], this)};\n`
+        let sterm = generateUniqueHelperString();
+        code += `${webgltype(array.type)} ${sterm} = ${array.term};\n`;
+        code += `${webgltype(ittype)} ${it};\n`
+        for (let i = 0; i < array.type.length; i++) { //unroll forall/apply
+            code += `${it} = ${accessor(array.type.length, i)([sterm], [], this)};\n`
             code += r.code;
             if (generateTerm) {
-                code += `${accessor(array.type.length, i)([ansvar], [], this)} = ${r.term};\n`;
+                if (expr['oper'] === "forall$2" || expr['oper'] === "forall$3") {
+                    if (i === array.type.length - 1) {
+                        code += `${ansvar} = ${r.term};\n`;
+                    }
+                } else code += `${accessor(array.type.length, i)([ansvar], [], this)} = ${r.term};\n`;
             }
         }
         return (generateTerm ? {

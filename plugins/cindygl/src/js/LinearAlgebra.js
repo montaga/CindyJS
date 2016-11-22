@@ -168,6 +168,11 @@ function useadd(t) {
   else return (args, modifs, codebuilder) => generateadd(t, modifs, codebuilder) || `add${webgltype(t)}(${args.join(',')})`;
 }
 
+function usesum(t) {
+  if(isnativeglsl(t)) return useinfix('+');
+  else return (args, modifs, codebuilder) => generateadd(t, modifs, codebuilder) || `add${webgltype(t)}(${args.join(',')})`;
+}
+
 function usesub(t) {
   if(isnativeglsl(t)) return useinfix('-');
   else return (args, modifs, codebuilder) => generatesub(t, modifs, codebuilder) || `sub${webgltype(t)}(${args.join(',')})`;
