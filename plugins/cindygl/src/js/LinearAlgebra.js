@@ -232,6 +232,59 @@ function usecvec(n) {
         })`;
 }
 
+function uselist(t) {
+  let d = depth(t);
+  if(isnativeglsl(t)) {
+    if(d==2) {
+       let n = t.length, m = t.parameters.length;
+      if(n == m && 2 <= n && n <= 4) //transpose by hand as it is not supported in WebGL
+        return args => `mat${n}(${range(n).map(k => `vec${n}(${ //col k
+          range(n).map(i => `${args[i]}[${k}]`).join(',') 
+        })`).join(',')}`;
+      }
+    return (args, modifs, codebuilder) => `${webgltype(t)}(${args.join(',')})`;
+  }
+  if(d == 1) {
+    if(isrvectorspace(t)) return usevec(t.length);
+    if(iscvectorspace(t)) return usecvec(t.length);
+  }
+  let fp = finalparameter(t);
+  if (fp === type.complex) {
+    let rt = replaceCbyR(t);
+    return (args, modifs, codebuilder) => createstruct(t, codebuilder) ||
+          `${webgltype(t)}(${
+            uselist(rt)(args.map(a => `(${a}).real`), modifs, codebuilder)
+          },${
+            uselist(rt)(args.map(a => `(${a}).imag`), modifs, codebuilder)
+          })`;
+    }
+  
+  return (args, modifs, codebuilder) => createstruct(t, codebuilder) || `${webgltype(t)}(${args.join(',')})`;
+}
+
+function accesslist(t, k) {
+  let fp = finalparameter(t);
+  if (fp === type.complex) {
+      let rt = replaceCbyR(t);
+      return (args, modifs, codebuilder) => {
+          createstruct(t.parameters, codebuilder);
+          return `${webgltype(t.parameters)}(${
+            accesslist(rt, k)([args[0]+'.real'], modifs, codebuilder)
+          },${
+            accesslist(rt, k)([args[0]+'.imag'], modifs, codebuilder)
+          })`;
+      };
+  }
+  let d = depth(t);
+  if(d==1 && isrvectorspace(t)) {
+    return accessvecbyshifted(t.length, k);
+  }
+  return (args, modifs, codebuilder) => {
+    createstruct(t.parameters, codebuilder);
+    return `(${args[0]}).a${k};`;
+  };
+}
+
 
 function accessvecbyshifted(n, k) {
   return (args, modifs, codebuilder) => { //works only for hardcoded glsl

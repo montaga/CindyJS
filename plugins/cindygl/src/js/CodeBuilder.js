@@ -587,7 +587,7 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
             console.error('Accessing this kind of lists not implemented yet');
         code += array.code;
         let sterm = array.term;
-        if (!this.variables[sterm] && !this.uniforms[sterm] && array.type.length>=2) { //evaluate array.term to new variable sterm if it is complicated and used twice
+        if (!this.variables[sterm] && !this.uniforms[sterm] && array.type.length >= 2) { //evaluate array.term to new variable sterm if it is complicated and used twice
             sterm = generateUniqueHelperString();
             code += `${webgltype(array.type)} ${sterm} = ${array.term};\n`;
         }

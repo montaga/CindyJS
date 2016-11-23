@@ -289,6 +289,11 @@ function webgltype(ctype) {
         return `cmat${ctype.length}_${ctype.parameters.length}`;
     }
 
+    if (ctype.type === 'list') {
+        return `l${ctype.length}_${webgltype(ctype.parameters)}`;
+    }
+
+
     console.error(`No WebGL implementation for type ${typeToString(ctype)} found`);
 }
 
