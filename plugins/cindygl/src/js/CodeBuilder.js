@@ -583,8 +583,6 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
             ansvar = generateUniqueHelperString();
             code += `${webgltype(ctype)} ${ansvar};`;
         }
-        let accessor = isrvectorspace(array.type) ? accessvecbyshifted : iscvectorspace(array.type) ? accesscvecbyshifted :
-            console.error('Accessing this kind of lists not implemented yet');
         code += array.code;
         let sterm = array.term;
         if (!this.variables[sterm] && !this.uniforms[sterm] && array.type.length >= 2) { //evaluate array.term to new variable sterm if it is complicated and used twice
@@ -593,14 +591,14 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
         }
         code += `${webgltype(ittype)} ${it};\n`
         for (let i = 0; i < array.type.length; i++) { //unroll forall/apply because dynamic access of arrays would require branching
-            code += `${it} = ${accessor(array.type.length, i)([sterm], [], this)};\n`
+            code += `${it} = ${accesslist(array.type, i)([sterm], [], this)};\n`
             code += r.code;
             if (generateTerm) {
                 if (expr['oper'] === "forall$2" || expr['oper'] === "forall$3") {
                     if (i === array.type.length - 1) {
                         code += `${ansvar} = ${r.term};\n`;
                     }
-                } else code += `${accessor(array.type.length, i)([ansvar], [], this)} = ${r.term};\n`;
+                } else code += `${accesslist(array.type, i)([ansvar], [], this)} = ${r.term};\n`;
             }
         }
         return (generateTerm ? {

@@ -186,57 +186,34 @@ function inclusionfunction(toType) {
                 ]
             ]);
         default:
-            //real list
-            if (toType.type === 'list' && issubtypeof(toType.parameters, type.float)) return args => {
-                let fromType = args[0];
-                if (fromType.type === 'list' && issubtypeof(fromType.parameters, type.float) && fromType.length === toType.length) {
-                    return {
-                        args: args,
-                        res: toType,
-                        generator: identity
+            if (toType.type === 'list') {
+                let fp = finalparameter(toType);
+                if (issubtypeof(fp, type.float)) { //real list
+                    return args => {
+                        let fromType = args[0];
+                        if (issubtypeof(fromType, toType)) {
+                            return {
+                                args: args,
+                                res: toType,
+                                generator: identity
+                            };
+                        }
+                    };
+                } else if (issubtypeof(fp, type.complex)) { //complex list
+                    return args => {
+                        let fromType = args[0];
+                        let rt = replaceCbyR(toType);
+                        if (issubtypeof(fromType, rt)) {
+                            return {
+                                args: args,
+                                res: toType,
+                                generator: (list, modifs, codebuilder) => `${webgltype(toType)}(${list}, ${constantreallist(rt, 0)([],modifs, codebuilder)} )`
+                            };
+                        }
                     };
                 }
-            };
-            //complex list
-            else if (toType.type === 'list' && toType.parameters === type.complex) return args => {
-                let fromType = args[0];
-                if (fromType.type === 'list' && issubtypeof(fromType.parameters, type.float) && fromType.length === toType.length) {
-                    let n = toType.length;
-                    return {
-                        args: [list(n, type.float)],
-                        res: toType,
-                        generator: list => `cvec${n}(${list}, ${usevec(n)(Array(n).fill('0.'))})`
-                    };
-                }
-            };
-            //real matrix
-            else if (toType.type === 'list' && toType.parameters === 'list' && issubtypeof(toType.parameters.parameters, type.float)) return args => {
-                let fromType = args[0];
-                if (fromType.type === 'list' && fromType.parameters === 'list' && issubtypeof(fromType.parameters.parameters, type.float) && fromType.length === toType.length && fromType.parameters.length === toType.parameters.length) {
-                    return {
-                        args: args,
-                        res: toType,
-                        generator: identity
-                    };
-                }
-            };
-            //complex matrix
-            else if (toType.type === 'list' && toType.parameters === 'list' && toType.parameters.parameters === type.complex) return args => {
-                let fromType = args[0];
-                if (fromType.type === 'list' && fromType.parameters === 'list' && issubtypeof(fromType.parameters.parameters, type.float) && fromType.length === toType.length && fromType.parameters.length === toType.parameters.length) {
-                    let n = toType.length;
-                    let m = toType.parameters.length;
-                    return {
-                        args: [list(n, list(m, type.float))],
-                        res: toType,
-                        generator: list => `cmat${n}_${m}(${list}, ${usemat(n, m)(Array(n).fill(
-                          usevec(m)(Array(m).fill('0.'))
-                        ))})`
-                    };
-                }
-            };
+            }
     }
-
 
     console.log(`no inclusionfunction ->${typeToString(toType)} implemented yet; using identity...`);
     return args => ({

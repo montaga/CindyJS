@@ -69,15 +69,13 @@ function generatesum(t, modifs, codebuilder) {
   if(isnativeglsl(t)) return;
   let n = t.length;
     let name = `sum${webgltype(t)}`;
-    let accessor = isrvectorspace(t.type) ? accessvecbyshifted : iscvectorspace(t.type) ? accesscvecbyshifted :
-        console.error('Accessing this kind of lists not implemented yet');
         
     codebuilder.add('functions', name, () =>  `${webgltype(t.parameters)} ${name}(${webgltype(t)} a){` +
       `${webgltype(t.parameters)} res; //TODO: init with 0
       ${
         range(n).map(k =>
           useadd(t.parameters)(['res',
-          accessor(t.length, k)(['a',k], modifs, codebuilder)
+          accesslist(t, k)(['a',k], modifs, codebuilder)
         ],modifs,codebuilder)
         ).join('\n')
       }
@@ -211,18 +209,6 @@ function usevec(n) {
       })`;
 }
 
-function usemat(n, m) { //create a nxm matrix by given n row-vectors of length m
-    if(n == m && 2 <= n && n <= 4) //transpose by hand as it is not supported in WebGL
-      return args => `mat${n}(${range(n).map(k => `vec${n}(${ //col k
-      range(n).map(i => `${args[i]}[${k}]`).join(',') 
-    })`).join(',')}`;
-    let cum = 0;
-    return (args, modifs, codebuilder) => createstruct(list(n, type.vec(m)), codebuilder) ||
-      `cmat${n}_${m}(${
-          args.join(',')
-      })`;
-}
-
 function usecvec(n) {
     return (args, modifs, codebuilder) => createstruct(type.cvec(n), codebuilder) ||
         `cvec${n}(${
@@ -285,6 +271,16 @@ function accesslist(t, k) {
   };
 }
 
+/** creates a reallist of type t that has everywhere value val */
+function constantreallist(t,val) {
+  if(isnativeglsl(t)) return (args, modifs, codebuilder) => `${uselist(t)}(float(${val}))`;
+  return (args, modifs, codebuilder) => {
+    createstruct(t, codebuilder);
+    return `${uselist(t)}(${
+      genchilds(t).map(ch => constantreallist(ch.type, val)(args, modifs, codebuilder))
+    })`;
+  };
+}
 
 function accessvecbyshifted(n, k) {
   return (args, modifs, codebuilder) => { //works only for hardcoded glsl
@@ -300,15 +296,6 @@ function accessvecbyshifted(n, k) {
   };
 }
 
-function accesscvecbyshifted(n, k) {
-  return (args, modifs, codebuilder) => { //works only for hardcoded glsl
-      return `vec2(${
-        accessvecbyshifted(n, k)([args[0]+'.real', args[1]], modifs, codebuilder)
-      },${
-        accessvecbyshifted(n, k)([args[0]+'.imag', args[1]], modifs, codebuilder)
-      })`;
-  };
-}
 
 function usescalarmult(t) { //assume t is a R or C-vectorspace
   if(isnativeglsl(t)) return useinfix('*');
