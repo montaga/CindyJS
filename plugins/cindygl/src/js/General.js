@@ -160,7 +160,7 @@ var helpercnt = 0;
 
 function generateUniqueHelperString() {
     helpercnt++;
-    return `_helper${helpercnt}`;
+    return `_h${helpercnt}`;
 }
 
 function enlargeCanvasIfRequired(sizeX, sizeY) {

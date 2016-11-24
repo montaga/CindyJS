@@ -374,8 +374,20 @@ webgl["mult"] = args => {
                 res: type.float,
                 generator: usedot(a.length)
             };
-        } //TODO: complex scalar products
+        }
     }
+
+    if ([a, b].every(a => a.type === 'list' && issubtypeof(a.parameters, type.complex)) && a.length === b.length) {
+        let vectorspace = getcvectorspace(a);
+
+        return {
+            args: [vectorspace, vectorspace],
+            res: type.float,
+            generator: usecdot(a.length)
+        };
+
+    }
+
 
     //real matrix-vector products (also non-quadratic)
     if (isrvectorspace(a) && depth(a) === 2 &&
@@ -601,23 +613,19 @@ webgl["im"] = first([
 
 webgl["genList"] = args => {
     let n = args.length;
-
-    //real list
-    if (args.every(a => issubtypeof(a, type.float))) {
-        return {
-            args: Array(n).fill(type.float),
-            res: type.vec(n),
-            generator: usevec(n),
-        };
-    }
-
-    //complex list
-    if (args.every(a => issubtypeof(a, type.complex))) {
-        return {
-            args: Array(n).fill(type.complex),
-            res: type.cvec(n),
-            generator: usecvec(n),
-        };
+    if (n > 0) {
+        let l = false;
+        for (let i in args) {
+            l = lca(l, args[i]);
+        }
+        if (l) {
+            let t = list(n, l);
+            return {
+                args: Array(n).fill(l),
+                res: t,
+                generator: uselist(t),
+            };
+        }
     }
     return false;
 }

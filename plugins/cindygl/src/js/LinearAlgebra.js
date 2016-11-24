@@ -56,9 +56,6 @@ function generatematmult(t, modifs, codebuilder) {
   if(isnativeglsl(t)) return;
   let n = t.length;
   let m = t.parameters.length;
-    createstruct(type.vec(m), codebuilder);
-    createstruct(type.vec(n), codebuilder);
-    createstruct(t, codebuilder);
     let name = `mult${n}_${m}`;
     codebuilder.add('functions', name, () =>  `vec${n} mult${n}_${m}(mat${n}_${m} a, vec${m} b){` +
         'return ' + usevec(n)(range(n).map(k => usedot(m)([`a.a${k}`, 'b'], modifs, codebuilder)), modifs, codebuilder) + ';' +
@@ -71,7 +68,7 @@ function generatesum(t, modifs, codebuilder) {
     let name = `sum${webgltype(t)}`;
         
     codebuilder.add('functions', name, () =>  `${webgltype(t.parameters)} ${name}(${webgltype(t)} a){` +
-      `${webgltype(t.parameters)} res; //TODO: init with 0
+      `${webgltype(t.parameters)} res = ${constantreallist(t.parameters, 0)([],modifs,codebuilder)};
       ${
         range(n).map(k =>
           useadd(t.parameters)(['res',
@@ -86,9 +83,6 @@ function generatesum(t, modifs, codebuilder) {
 function generatecmatmult(t, modifs, codebuilder) {
   let n = t.length;
   let m = t.parameters.length;
-    createstruct(type.vec(m), codebuilder);
-    createstruct(type.vec(n), codebuilder);
-    createstruct(t, codebuilder);
     let rt = replaceCbyR(t);
     let name = `cmult${n}_${m}`;
     //(A.real+i*A.imag)*(b.real+i*b.imag) = (A.real*b.real - A.imag*b.imag) + i *(A.real*b.imag+A.imag*b.real)
@@ -110,10 +104,24 @@ function generatecmatmult(t, modifs, codebuilder) {
 
 function generatedot(n, codebuilder) {
     if((2 <= n && n<=4)) return;
-    createstruct(type.vec(n), codebuilder);
     let name = `dot${n}`;
     codebuilder.add('functions', name, () =>  `float dot${n}(vec${n} a, vec${n} b) {
     return ${ sizes(n).map((size, k) => `dot(a.a${k},b.a${k})`).join('+')}; }`);
+}
+
+function generatecdot(n, modifs, codebuilder) {
+    let name = `cdot${n}`;
+    codebuilder.add('functions', name, () =>  `vec2 cdot${n}(cvec${n} a, cvec${n} b) {
+  return vec2(${
+      usedot(n)(['a.real','b.real'], modifs, codebuilder)
+    } + ${
+      usedot(n)(['a.imag','b.imag'], modifs, codebuilder)
+    }, ${
+      usedot(n)(['a.real','b.imag'], modifs, codebuilder)
+    } + ${
+      usedot(n)(['a.imag','b.real'], modifs, codebuilder)
+    }
+  ); }`);
 }
 
 function generateadd(t, modifs, codebuilder) {
@@ -181,6 +189,10 @@ function usedot(n) {
   return (args, modifs, codebuilder) => generatedot(n, codebuilder) || `dot${(2 <= n && n<=4) ? '' : n}(${args.join(',')})`;
 }
 
+function usecdot(n) {
+  return (args, modifs, codebuilder) => generatecdot(n, modifs, codebuilder) || `cdot${n}(${args.join(',')})`;
+}
+
 function useadd(t) {
   if(isnativeglsl(t)) return useinfix('+');
   else return (args, modifs, codebuilder) => generateadd(t, modifs, codebuilder) || `add${webgltype(t)}(${args.join(',')})`;
@@ -201,8 +213,7 @@ function usevec(n) {
     if(2 <= n && n <= 4) return args => `vec${n}(${args.join(',')})`;
     if(n == 1) return args => `float(${args.join(',')})`;
     let cum = 0;
-    return (args, modifs, codebuilder) => createstruct(type.vec(n), codebuilder) ||
-        `vec${n}(${
+    return (args, modifs, codebuilder) => createstruct(type.vec(n), codebuilder) || `vec${n}(${
         sizes(n).map( s =>
           `vec${s}(${range(s).map(l => ++cum && args[cum-1]).join(',')})`
         ).join(',')
@@ -210,8 +221,7 @@ function usevec(n) {
 }
 
 function usecvec(n) {
-    return (args, modifs, codebuilder) => createstruct(type.cvec(n), codebuilder) ||
-        `cvec${n}(${
+    return (args, modifs, codebuilder) => createstruct(type.cvec(n), codebuilder) || `cvec${n}(${
           usevec(n)(args.map(a => `(${a}).x`), modifs, codebuilder)
         },${
           usevec(n)(args.map(a => `(${a}).y`), modifs, codebuilder)
@@ -237,56 +247,45 @@ function uselist(t) {
   let fp = finalparameter(t);
   if (fp === type.complex) {
     let rt = replaceCbyR(t);
-    return (args, modifs, codebuilder) => createstruct(t, codebuilder) ||
-          `${webgltype(t)}(${
+    return (args, modifs, codebuilder) => createstruct(t, codebuilder) || `${webgltype(t)}(${
             uselist(rt)(args.map(a => `(${a}).real`), modifs, codebuilder)
           },${
             uselist(rt)(args.map(a => `(${a}).imag`), modifs, codebuilder)
           })`;
     }
   
-  return (args, modifs, codebuilder) => createstruct(t, codebuilder) || `${webgltype(t)}(${args.join(',')})`;
+  return (args, modifs, codebuilder) => createstruct(t, codebuilder) ||  `${webgltype(t)}(${args.join(',')})`;
 }
 
 function accesslist(t, k) {
   let fp = finalparameter(t);
   if (fp === type.complex) {
       let rt = replaceCbyR(t);
-      return (args, modifs, codebuilder) => {
-          createstruct(t.parameters, codebuilder);
-          return `${webgltype(t.parameters)}(${
+      return (args, modifs, codebuilder) => `${webgltype(t.parameters)}(${
             accesslist(rt, k)([args[0]+'.real'], modifs, codebuilder)
           },${
             accesslist(rt, k)([args[0]+'.imag'], modifs, codebuilder)
           })`;
-      };
   }
   let d = depth(t);
   if(d==1 && isrvectorspace(t)) {
     return accessvecbyshifted(t.length, k);
   }
-  return (args, modifs, codebuilder) => {
-    createstruct(t.parameters, codebuilder);
-    return `(${args[0]}).a${k};`;
-  };
+  return (args, modifs, codebuilder) => `(${args[0]}).a${k}`;
 }
 
 /** creates a reallist of type t that has everywhere value val */
-function constantreallist(t,val) {
-  if(isnativeglsl(t)) return (args, modifs, codebuilder) => `${uselist(t)}(float(${val}))`;
-  return (args, modifs, codebuilder) => {
-    createstruct(t, codebuilder);
-    return `${uselist(t)}(${
-      genchilds(t).map(ch => constantreallist(ch.type, val)(args, modifs, codebuilder))
+function constantreallist(t, val) {
+  if(isnativeglsl(t))
+    return (args, modifs, codebuilder) => `${webgltype(t)}(float(${val}))`;
+  else
+    return (args, modifs, codebuilder) => `${uselist(t)}(dadadadada${
+      genchilds(t).map(ch => constantreallist(ch.type, val)(args, modifs, codebuilder)).join(',')
     })`;
-  };
 }
 
 function accessvecbyshifted(n, k) {
   return (args, modifs, codebuilder) => { //works only for hardcoded glsl
-      createstruct(type.vec(n), codebuilder);
-      //let k = Number(args[1]) - 1;
-      //console.log(`k = ${k};`);
       if(n == 1)
           return `(${args[0]})`;
       if(2 <= n && n <= 4)

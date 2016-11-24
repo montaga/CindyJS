@@ -145,8 +145,8 @@ CodeBuilder.prototype.computeType = function(expr) { //expression, current funct
         }
         let f = getPlainName(expr['oper']);
         let implementation = webgl[f] ? webgl[f](argtypes) : false;
-        if (!implementation && argtypes.every(a => a)) //no implementation found and all args are set
-            console.error(`Could not find an implementation for ${f} with args (${argtypes.map(typeToString).join(', ')})`);
+        //if (!implementation && argtypes.every(a => a)) //no implementation found and all args are set
+        //    console.error(`Could not find an implementation for ${f} with args (${argtypes.map(typeToString).join(', ')})`);
         return implementation ? implementation.res : false;
     }
     console.error("Don't know how to compute type of");
@@ -468,7 +468,12 @@ CodeBuilder.prototype.precompile = function(expr, bindings) {
     this.determineVariables(expr, bindings);
     this.determineUniforms(expr);
     this.determineUniformTypes();
+
     this.determineTypes();
+    for (let u in this.uniforms)
+        if (this.uniforms[u].type.type === 'list') createstruct(this.uniforms[u].type, this);
+    for (let v in this.variables)
+        if (this.variables[v].T.type === 'list') createstruct(this.variables[v].T, this);
     this.precompileDone = true;
 };
 
@@ -585,12 +590,17 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
         }
         code += array.code;
         let sterm = array.term;
-        if (!this.variables[sterm] && !this.uniforms[sterm] && array.type.length >= 2) { //evaluate array.term to new variable sterm if it is complicated and used twice
+
+        //evaluate array.term to new variable sterm if it is complicated and it used at least twice
+        if (!this.variables[sterm] && !this.uniforms[sterm] && array.type.length >= 2) {
             sterm = generateUniqueHelperString();
             code += `${webgltype(array.type)} ${sterm} = ${array.term};\n`;
         }
+
+
         code += `${webgltype(ittype)} ${it};\n`
-        for (let i = 0; i < array.type.length; i++) { //unroll forall/apply because dynamic access of arrays would require branching
+            //unroll forall/apply because dynamic access of arrays would require branching
+        for (let i = 0; i < array.type.length; i++) {
             code += `${it} = ${accesslist(array.type, i)([sterm], [], this)};\n`
             code += r.code;
             if (generateTerm) {
@@ -598,9 +608,13 @@ CodeBuilder.prototype.compile = function(expr, generateTerm) {
                     if (i === array.type.length - 1) {
                         code += `${ansvar} = ${r.term};\n`;
                     }
-                } else code += `${accesslist(array.type, i)([ansvar], [], this)} = ${r.term};\n`;
+                } else code += `${accesslist(ctype, i)([ansvar], [], this)} = ${r.term};\n`;
             }
         }
+
+        if (ittype.type === 'list') createstruct(ittype, this);
+        if (ctype.type === 'list') createstruct(ctype, this);
+
         return (generateTerm ? {
             code: code,
             term: ansvar,
