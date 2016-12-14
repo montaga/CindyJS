@@ -236,6 +236,8 @@ This statement supports exactly the same modifiers as `fillplot(…)`.
 Colorplots are useful to create visual information about functions defined in the entire plane.
 They can associate a color value to every point in a rectangle.
 
+In CindyJS the expressions are compiled to WebGL at the first time when the colorplot command is called. For consecutive calls of colorplot on the same expression the previously compiled WebGL-Program is 
+
 #### Creating a colorplot: `colorplot(‹expr›,‹vec›,‹vec›)`
 
 **Not available in CindyJS yet!**
