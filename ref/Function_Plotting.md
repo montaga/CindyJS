@@ -236,7 +236,20 @@ This statement supports exactly the same modifiers as `fillplot(…)`.
 Colorplots are useful to create visual information about functions defined in the entire plane.
 They can associate a color value to every point in a rectangle.
 
-In CindyJS the expressions are compiled to WebGL at the first time when the colorplot command is called. For consecutive calls of colorplot on the same expression the previously compiled WebGL-Program is 
+In the Cinderella, colorplots will be computed on the CPU.
+
+Due to the compilation to WebGL, there are some restrictions for the expressions that can be used for `colorplot`.
+For example, the `while`-operator or recursive functions must not be used.
+
+For every variable that appears on the left side of an assignment within a `colorplot`-expression, it must be possible to determine its type in advance. Also, the type signature of a user defined functions must be determinable.
+
+The only allowed types are boolean values, integers, real numbers, complex numbers, points, vectors, and lists of fixed length. All members of a list must be of the same type and this type must be one of the allowed types. 
+
+In CindyJS, there are limitations for the terms that can be used within `colorplot`:
+  * Every CindyJS operation is allowed if the term does not depend on the pixel coordinate and does not contain an internal assignment.
+  * For all other terms, only the following operations are allowed:  `^`, `<`, `<=`, `=`, `==`, `>`, `>=`, `_`, `-`, `;`, `!=`, `/`, `&`, `%`, `+`, `abs`, `abs_infix`, `add`, `apply`, `arctan`, `arctan2`, `blue`, `ceil`, `complex`, `conjugate`, `cos`, `dist`, `dist_infix`, `div`, `exp`, `floor`, `forall`, `genList`, `green`, `grey`, `hue`, `if`, `im`, `imagergb`, `imagergba`, `join`, `log`, `max`, `meet`, `min`, `mod`, `mult`, `pow`, `random`, `re`, `red`, `regional`, `repeat`, `round`, `sin`, `sqrt`, `sub`, `sum`, `tan`.
+
+For technical reasons, both `repeat` and `_` require a constant argument for the number of iterations or the index of the field that is accessed. A term is considered to be constant if it is either a number or a function of constant terms. If an expression within a loop (`repeat`, `forall` or `apply`) that depends on the running variable is required to be constant, CindyJS tries to unroll the corresponding loop.
 
 #### Creating a colorplot: `colorplot(‹expr›,‹vec›,‹vec›)`
 
