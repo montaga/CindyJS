@@ -3374,6 +3374,37 @@ evaluator.indexof$3 = function(args, modifs) {
     return nada;
 };
 
+
+//parsing without evaluation
+evaluator.analyse$1 = function(args, modifs) {
+    var v0 = evaluate(args[0]);
+        
+    if (v0.ctype === 'string') {
+        var code = v0.value;
+        var prog = analyse(code);
+        return prog;
+    }
+    return nada;
+};
+
+
+evaluator.monombasis$1 = function(args, modifs) {
+  var ex = args[0];
+  var v0 = evaluate(ex);
+  if(v0 !== nada) {
+    let r = Dict.create();
+    Dict.put(r, Dict.create(), v0);
+    return r;
+  } else { //ex contains a variable
+    if(ex.ctype === "variable") {
+      let r = Dict.create();
+      Dict.put(r, General.string(ex.name), CSNumber.real(1));
+      return r;
+    }
+  }
+  
+};
+
 evaluator.parse$1 = function(args, modifs) {
     var v0 = evaluate(args[0]);
     if (v0.ctype === 'string') {
