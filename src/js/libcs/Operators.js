@@ -3387,19 +3387,53 @@ evaluator.analyse$1 = function(args, modifs) {
     return nada;
 };
 
+var sumdict = function (a, b) {
+  let r = Dict.clone(a);
+  for(let i in b.value) {
+    if(r.value[i]) {
+      r.value[i].value = CSNumber.add(r.value[i].value, b.value[i].value);
+    } else {
+      Dict.put(r, b.value[i].key, b.value[i].value);
+    }
+  }
+  return r;
+};
 
 evaluator.monombasis$1 = function(args, modifs) {
   var ex = args[0];
   var v0 = evaluate(ex);
+  var rec = x => evaluator.monombasis$1([x], modifs);
   if(v0 !== nada) {
     let r = Dict.create();
     Dict.put(r, Dict.create(), v0);
     return r;
   } else { //ex contains a variable
     if(ex.ctype === "variable") {
+      let k = Dict.create();
+      Dict.put(k, General.string(ex.name), CSNumber.real(1));
       let r = Dict.create();
-      Dict.put(r, General.string(ex.name), CSNumber.real(1));
+      Dict.put(r, k, CSNumber.real(1));
       return r;
+    } else if(ex.ctype === "infix") {
+      if(ex.oper==="*") {
+        let r = Dict.create();
+        let a = rec(ex.args[0]);
+        let b = rec(ex.args[1]);
+        for(let ai in a.value) {
+          for(let bi in b.value) {
+              let ak = a.value[ai].key;
+              let bk = b.value[bi].key;
+              let sk = sumdict(ak, bk);
+          
+              let cv = Dict.get(r, sk, CSNumber.zero);
+              Dict.put(r, sk, CSNumber.add(cv, CSNumber.mult(a.value[ai].value, b.value[bi].value)));
+          }
+        }
+        return r;
+      } else if(ex.oper==="+") {
+        return sumdict(rec(ex.args[0]), rec(ex.args[1]));
+      }
+      
     }
   }
   
