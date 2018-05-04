@@ -87,6 +87,22 @@ function updateCanvasDimensions() {
     canvas.height = csh = canvas.clientHeight;
     csctx.setTransform(1, 0, 0, 1, 0, 0); // reset
     csport.setMat(25, 0, 0, 25, 250.5, 250.5); // reset
+    
+    //console.log(csh);
+    //console.log(canvas.width);
+    //console.log(canvas.clientWidth);
+    var ratio1136 = canvas.clientWidth/1136;
+    csw = 1136;
+    csh = 640;
+    csport.ratio1136 = ratio1136;
+    //canvas.width = ratio*canvas.clientWidth;
+    //canvas.height = ratio*canvas.clientHeight;
+    //canvas.width = 1136;
+    //canvas.height = 640;
+    //csctx.scale(1/ratio, 1/ratio);
+    
+    csctx.scale(ratio1136, ratio1136);
+    //csport.scale(ratio);
     if (trafos) {
         for (var i = 0; i < trafos.length; i++) {
             var trafo = trafos[i];
@@ -108,6 +124,7 @@ function updateCanvasDimensions() {
             }
         }
     }
+    //csport.scale(ratio);
     csport.createnewbackup();
     csport.greset();
     var devicePixelRatio = 1;
@@ -125,7 +142,9 @@ function updateCanvasDimensions() {
         canvas.width = csw * ratio;
         canvas.height = csh * ratio;
         csctx.scale(ratio, ratio);
+        //console.log("do rescale...");
     }
+
 }
 
 // hook to allow instrumented versions to replace or augment the canvas object

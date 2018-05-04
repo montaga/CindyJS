@@ -13,6 +13,8 @@ csport.drawingstate.pointsize = 4.0;
 csport.drawingstate.linesize = 1.0;
 csport.drawingstate.textsize = null; // use defaultAppearance.textsize
 
+csport.ratio1136 = 1;
+
 csport.drawingstate.matrix = {};
 csport.drawingstate.matrix.a = 25;
 csport.drawingstate.matrix.b = 0;
@@ -76,6 +78,9 @@ csport.from = function(x, y, z) {
 
 // Convert Euclidean pixel coordinates to homogeneous user coordinates
 csport.to = function(px, py) {
+    px = px/csport.ratio1136;
+    py = py/csport.ratio1136;
+    //console.log(csport.ratio1136);
     var m = csport.drawingstate.matrix;
     var xx = px - m.tx;
     var yy = py + m.ty;
