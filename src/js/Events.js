@@ -144,6 +144,20 @@ function setuplisteners(canvas, data) {
         scheduleUpdate();
     }
 
+    function weakupdatePosition(event) {
+        var rect = canvas.getBoundingClientRect();
+        var x = event.clientX - rect.left - canvas.clientLeft + 0.5;
+        var y = event.clientY - rect.top - canvas.clientTop + 0.5;
+        var pos = csport.to(x, y);
+        mouse.prevx = mouse.x;
+        mouse.prevy = mouse.y;
+        mouse.x = pos[0];
+        mouse.y = pos[1];
+        csmouse[0] = mouse.x;
+        csmouse[1] = mouse.y;
+        scheduleUpdate();
+    }
+
     if (data.keylistener === true) {
         addAutoCleaningEventListener(document, "keydown", function(e) {
             cs_keydown(e);
@@ -379,72 +393,156 @@ function setuplisteners(canvas, data) {
         }
     });
 
+    /*
+        function touchMove(e) {
+
+            var activeTouchIDList = e.changedTouches;
+            var gotit = false;
+            for (var i = 0; i < activeTouchIDList.length; i++) {
+                if (activeTouchIDList[i].identifier === activeTouchID) {
+                    gotit = true;
+                }
+            }
+            if (!gotit) {
+                return;
+            }
+
+            updatePosition(e.targetTouches[0]);
+            if (mouse.down) {
+                cs_mousedrag();
+            } else {
+                cs_mousemove();
+            }
+
+            manage("mousemove");
+
+            e.preventDefault();
+        }
+        */
+
 
     function touchMove(e) {
-
+        console.log("MOVE");
+        console.log(e.changedTouches);
         var activeTouchIDList = e.changedTouches;
-        var gotit = false;
         for (var i = 0; i < activeTouchIDList.length; i++) {
-            if (activeTouchIDList[i].identifier === activeTouchID) {
-                gotit = true;
-            }
-        }
-        if (!gotit) {
-            return;
-        }
+            var id = activeTouchIDList[i].identifier;
 
-        updatePosition(e.targetTouches[0]);
-        if (mouse.down) {
+
+            move = activeTouches[id];
+            console.log("MOVING: " + id);
+            console.log(move);
+            weakupdatePosition(activeTouchIDList[i]);
+            traceMouseAndScripts();
+
             cs_mousedrag();
-        } else {
-            cs_mousemove();
-        }
+            activeTouches[id] = move;
 
+        }
         manage("mousemove");
 
         e.preventDefault();
     }
+
     var activeTouchID = -1;
+    /*
+        function touchDown(e) {
+            if (activeTouchID !== -1) {
+                return;
+            }
+
+            var activeTouchIDList = e.changedTouches;
+            if (activeTouchIDList.length === 0) {
+                return;
+            }
+            activeTouchID = activeTouchIDList[0].identifier;
+
+            updatePosition(e.targetTouches[0]);
+            cs_mousedown();
+            mouse.down = true;
+            //move = getmover(mouse);
+            manage("mousedown");
+            e.preventDefault();
+        }*/
+
+
+    var activeTouchID = -1;
+    var activeTouches = {};
+
 
     function touchDown(e) {
-        if (activeTouchID !== -1) {
-            return;
-        }
+        console.log("DOWN");
+        console.log(e.changedTouches);
+
 
         var activeTouchIDList = e.changedTouches;
-        if (activeTouchIDList.length === 0) {
+        if (activeTouchIDList.length == 0) {
             return;
         }
-        activeTouchID = activeTouchIDList[0].identifier;
 
-        updatePosition(e.targetTouches[0]);
-        cs_mousedown();
-        mouse.down = true;
-        //move = getmover(mouse);
-        manage("mousedown");
+        for (var i = 0; i < activeTouchIDList.length; i++) {
+            var id = activeTouchIDList[i].identifier;
+
+            updatePosition(activeTouchIDList[i]);
+            cs_mousedown();
+            mouse.down = true;
+            //move = getmover(mouse);
+            manage("mousedown");
+            activeTouches[id] = move;
+        }
+
+
         e.preventDefault();
     }
+
+    /*
+        function touchUp(e) {
+            var activeTouchIDList = e.changedTouches;
+            var gotit = false;
+            for (var i = 0; i < activeTouchIDList.length; i++) {
+                if (activeTouchIDList[i].identifier === activeTouchID) {
+                    gotit = true;
+                }
+            }
+
+            if (!gotit) {
+                return;
+            }
+            activeTouchID = -1;
+            mouse.down = false;
+            cindy_cancelmove();
+            cs_mouseup();
+            manage("mouseup");
+            scheduleUpdate();
+            e.preventDefault();
+        }*/
+
 
     function touchUp(e) {
+        console.log("UP");
+        console.log(e.changedTouches);
+
         var activeTouchIDList = e.changedTouches;
-        var gotit = false;
         for (var i = 0; i < activeTouchIDList.length; i++) {
-            if (activeTouchIDList[i].identifier === activeTouchID) {
-                gotit = true;
-            }
+            var id = activeTouchIDList[i].identifier;
+            move = activeTouches[id];
+
+            mouse.down = false;
+            cindy_cancelmove();
+            stateContinueFromHere();
+            cs_mouseup();
+            manage("mouseup");
+            scheduleUpdate();
+            delete activeTouches[id];
+
+
         }
 
-        if (!gotit) {
-            return;
-        }
-        activeTouchID = -1;
-        mouse.down = false;
-        cindy_cancelmove();
-        cs_mouseup();
-        manage("mouseup");
-        scheduleUpdate();
+        mouse.down = (Object.keys(activeTouches).length === 0);
+
         e.preventDefault();
     }
+
 
     addAutoCleaningEventListener(canvas, "touchstart", touchDown, false);
     addAutoCleaningEventListener(canvas, "touchmove", touchMove, true);
