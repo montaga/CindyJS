@@ -98,6 +98,9 @@ build/js/Cindy.closure.js: js_make
 build/js/Cindy.js: js_make
 	$(JS_MAKE) Cindy.js
 
+
+#this is nothing
+
 ######################################################################
 ## Forward targets to make/index.js
 ######################################################################
