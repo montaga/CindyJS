@@ -682,7 +682,7 @@ function computeimagedata(id, coordinates, prog) {
     var varhash = '#',
         varx = 'x',
         vary = 'y',
-        varz = 'y';
+        varz = 'z';
     namespace.newvar(varhash);
     namespace.newvar(varx);
     namespace.newvar(vary);
