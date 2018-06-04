@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+    <title>Cindy JS</title>
+    <script type="text/javascript" src="../build/js/Cindy.js"></script>
+  </head>
+    
+	<body style="font-family:Arial;">
+    
+    <h1>CindyJS: cpucolorplot</h1>
+
+    <script id="csmove" type="text/x-cindyscript">
+			draw((0,0));
+			//colorplot(random());
+      cpucolorplot([#.x, #.y, random()]);
+		</script>
+    <div  id="CSCanvas"></div>
+    
+    <script type="text/javascript">
+        
+                  
+        CindyJS({canvasname:"CSCanvas",
+                    scripts: "cs*",
+                    geometry:[],
+                    ports: [{
+                      id: "CSCanvas",
+                      width: 40,
+                      height: 20,
+                      transform: [ { visibleRect: [ 0, 0, 2, 1 ] } ]
+                    }]
+                    });
+    </script>              
+	</body>
+</html>

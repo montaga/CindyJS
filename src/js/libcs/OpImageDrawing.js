@@ -677,3 +677,82 @@ evaluator.readpixels$1 = function(args, modifs) {
     }
     return List.turnIntoCSList(pixels);
 };
+
+function computeimagedata(id, coordinates, prog) {
+    var varhash = '#',
+        varx = 'x',
+        vary = 'y',
+        varz = 'y';
+    namespace.newvar(varhash);
+    namespace.newvar(varx);
+    namespace.newvar(vary);
+    namespace.newvar(varz);
+    var r, g, b, a;
+    for (var pidx = 0; pidx < coordinates.length; pidx++) {
+        var x = coordinates[pidx].x;
+        var y = coordinates[pidx].y;
+
+        namespace.setvar(varhash, List.realVector([x, y]));
+        namespace.setvar(varx, CSNumber.real(x));
+        namespace.setvar(vary, CSNumber.real(y));
+        namespace.setvar(varz, CSNumber.complex(x, y));
+
+        var rgba = evaluate(prog).value;
+        r = g = b = 0;
+        a = 1;
+        if (rgba.length == 1) {
+            if (CSNumber._helper.isAlmostReal(rgba[0])) {
+                r = g = b = rgba[0].value.real;
+            }
+        } else if (rgba.length == 3 || rgba.length == 4) {
+            if (CSNumber._helper.isAlmostReal(rgba[0])) {
+                r = rgba[0].value.real;
+            }
+            if (CSNumber._helper.isAlmostReal(rgba[1])) {
+                g = rgba[1].value.real;
+            }
+            if (CSNumber._helper.isAlmostReal(rgba[2])) {
+                b = rgba[2].value.real;
+            }
+            if (rgba.length == 4 && CSNumber._helper.isAlmostReal(rgba[3])) {
+                a = rgba[3].value.real;
+            }
+        }
+
+        id.data[4 * pidx + 0] = r * 255;
+        id.data[4 * pidx + 1] = g * 255;
+        id.data[4 * pidx + 2] = b * 255;
+        id.data[4 * pidx + 3] = a * 255;
+    }
+
+    namespace.removevar(varhash);
+    namespace.removevar(varx);
+    namespace.removevar(vary);
+    namespace.removevar(varz);
+    return id;
+}
+
+evaluator.cpucolorplot$1 = function(args, modifs) {
+    var iw = canvas.width; //internal measures. might be twice as csw on HiDPI-Displays
+    var ih = canvas.height;
+
+    var screen = evaluator.screen$0().value[0];
+    var ul = screen[0];
+    var lr = screen[2];
+
+    var coordinates = [];
+    for (var iy = 0; iy < ih; iy++) {
+        for (var ix = 0; ix < iw; ix++) {
+            //var pidx = (iy * iw + ix);
+            coordinates.push({
+                x: ul.X + (lr.X - ul.X) * (ix + 0.5) / iw,
+                y: ul.Y + (lr.Y - ul.Y) * (iy + 0.5) / ih
+            });
+        }
+    }
+
+    var id = computeimagedata(csctx.createImageData(iw, ih), coordinates, args[0]);
+
+
+    csctx.putImageData(id, 0, 0);
+}
