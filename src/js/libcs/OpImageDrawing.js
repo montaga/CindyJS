@@ -678,46 +678,56 @@ evaluator.readpixels$1 = function(args, modifs) {
     return List.turnIntoCSList(pixels);
 };
 
+function clamp(a) {
+    return Math.min(1, Math.max(0, a));
+};
+
 function computeimagedata(id, coordinates, prog) {
     var varhash = '#',
         varx = 'x',
         vary = 'y',
         varz = 'z';
     namespace.newvar(varhash);
-    namespace.newvar(varx);
-    namespace.newvar(vary);
-    namespace.newvar(varz);
+    //namespace.newvar(varx);
+    //namespace.newvar(vary);
+    //namespace.newvar(varz);
     var r, g, b, a;
     for (var pidx = 0; pidx < coordinates.length; pidx++) {
         var x = coordinates[pidx].x;
         var y = coordinates[pidx].y;
 
         namespace.setvar(varhash, List.realVector([x, y]));
-        namespace.setvar(varx, CSNumber.real(x));
-        namespace.setvar(vary, CSNumber.real(y));
-        namespace.setvar(varz, CSNumber.complex(x, y));
+        //namespace.setvar(varx, CSNumber.real(x));
+        //namespace.setvar(vary, CSNumber.real(y));
+        //namespace.setvar(varz, CSNumber.complex(x, y));
 
-        var rgba = evaluate(prog).value;
+        var color = evaluate(prog);
         r = g = b = 0;
         a = 1;
-        if (rgba.length == 1) {
-            if (CSNumber._helper.isAlmostReal(rgba[0])) {
-                r = g = b = rgba[0].value.real;
+        if (color.ctype === "number" && CSNumber._helper.isAlmostReal(color)) {
+            r = g = b = color.value.real;
+        } else if (color.value.length == 1) {
+            if (CSNumber._helper.isAlmostReal(color.value[0])) {
+                r = g = b = color.value[0].value.real;
             }
-        } else if (rgba.length == 3 || rgba.length == 4) {
-            if (CSNumber._helper.isAlmostReal(rgba[0])) {
-                r = rgba[0].value.real;
+        } else if (color.value.length == 3 || color.value.length == 4) {
+            if (CSNumber._helper.isAlmostReal(color.value[0])) {
+                r = color.value[0].value.real;
             }
-            if (CSNumber._helper.isAlmostReal(rgba[1])) {
-                g = rgba[1].value.real;
+            if (CSNumber._helper.isAlmostReal(color.value[1])) {
+                g = color.value[1].value.real;
             }
-            if (CSNumber._helper.isAlmostReal(rgba[2])) {
-                b = rgba[2].value.real;
+            if (CSNumber._helper.isAlmostReal(color.value[2])) {
+                b = color.value[2].value.real;
             }
-            if (rgba.length == 4 && CSNumber._helper.isAlmostReal(rgba[3])) {
-                a = rgba[3].value.real;
+            if (color.length == 4 && CSNumber._helper.isAlmostReal(color.value[3])) {
+                a = color.value[3].value.real;
             }
         }
+        r = clamp(r);
+        g = clamp(g);
+        b = clamp(b);
+        a = clamp(a);
 
         id.data[4 * pidx + 0] = r * 255;
         id.data[4 * pidx + 1] = g * 255;
@@ -726,9 +736,9 @@ function computeimagedata(id, coordinates, prog) {
     }
 
     namespace.removevar(varhash);
-    namespace.removevar(varx);
-    namespace.removevar(vary);
-    namespace.removevar(varz);
+    //namespace.removevar(varx);
+    //namespace.removevar(vary);
+    //namespace.removevar(varz);
     return id;
 }
 
@@ -752,7 +762,54 @@ evaluator.cpucolorplot$1 = function(args, modifs) {
     }
 
     var id = computeimagedata(csctx.createImageData(iw, ih), coordinates, args[0]);
-
-
     csctx.putImageData(id, 0, 0);
-}
+
+    return nada;
+};
+
+
+evaluator.cpucolorplot$4 = function(args, modifs) {
+    var a = evaluateAndVal(args[0]);
+    var b = evaluateAndVal(args[1]);
+    var name = evaluate(args[2]);
+    var prog = args[3];
+
+    var pta = eval_helper.extractPoint(a);
+    var ptb = eval_helper.extractPoint(b);
+    if (!pta.ok || !ptb.ok || !(name.ctype === 'string' || name.ctype === 'image')) {
+        return nada;
+    }
+
+    var image = imageFromValue(name);
+
+    if (!image || !image.img.getContext) {
+        return nada;
+    }
+    var ictx = image.img.getContext('2d');
+
+    var cw = image.width;
+    var ch = image.height;
+
+    var diffx = ptb.x - pta.x;
+    var diffy = ptb.y - pta.y;
+
+
+    var coordinates = [];
+    for (var iy = 0; iy < ch; iy++) {
+        for (var ix = 0; ix < cw; ix++) {
+            //var pidx = (iy * iw + ix);
+            var ry = ch - iy;
+            coordinates.push({
+                x: pta.x + diffx / cw * (ix + .5) - diffy / cw * (ry + .5),
+                y: pta.y + diffy / cw * (ix + .5) + diffx / cw * (ry + .5)
+            });
+        }
+    }
+
+    var id = computeimagedata(ictx.createImageData(cw, ch), coordinates, prog);
+    ictx.putImageData(id, 0, 0);
+
+    image.generation++;
+
+    return nada;
+};
