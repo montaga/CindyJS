@@ -173,6 +173,7 @@ function addElementOrFindElement(el) {
       var oel = csgeo.csnames[othername]; //other element
       if(oel!=el) {
         if(pseudoEqualityProof(oel,el)) {
+          console.log("The element to be added seems to exist already. Let me remove the new elmenent and return the existing one.");
           removeElement(el.name);
           return oel;
         }
