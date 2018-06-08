@@ -160,6 +160,27 @@ function addElement(el) {
     return el;
 }
 
+function pseudoEqualityProof(a, b) {
+  //we need some randomized tracing here instead
+  return (a.kind === b.kind) && a.homog && b.homog && (List.almostequals(List.normalizeZ(a.homog), List.normalizeZ(b.homog)).value);
+}
+
+function addElementOrFindElement(el) {
+    el = addElementNoProof(el);
+    checkConjectures();
+    
+    for(var othername in csgeo.csnames) {
+      var oel = csgeo.csnames[othername]; //other element
+      if(oel!=el) {
+        if(pseudoEqualityProof(oel,el)) {
+          removeElement(el.name);
+          return oel;
+        }
+      }
+    }
+    return el;
+}
+
 function addElementNoProof(el) {
     var i;
 

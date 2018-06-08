@@ -4026,7 +4026,7 @@ evaluator.createpoint$2 = function(args, modifs) {
 
     return {
         'ctype': 'geo',
-        'value': addElement(el)
+        'value': addElementOrFindElment(el)
     };
 };
 
@@ -4121,7 +4121,7 @@ evaluator.create$3 = function(args, modifs) {
 
     return {
         'ctype': 'geo',
-        'value': addElement(el)
+        'value': addElementOrFindElement(el)
     };
 };
 
