@@ -4196,6 +4196,17 @@ evaluator.create$2 = function(args, modifs) {
     return evaluator.create$3([List.turnIntoCSList(names), args[0], args[1]], modifs);
 };
 
+evaluator.removeelement$1 = function(args, modifs) {
+  var el = evaluate(args[0]);
+  if(el.ctype === 'string') {
+      removeElement(el.value);
+  } else if(el.ctype === 'geo') {
+      removeElement(el.value.name);
+  }
+  
+  return nada;
+};
+
 ///////////////////////////////
 //   Calling external code   //
 ///////////////////////////////
