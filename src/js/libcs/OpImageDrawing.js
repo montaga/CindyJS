@@ -800,8 +800,8 @@ evaluator.cpucolorplot$4 = function(args, modifs) {
             //var pidx = (iy * iw + ix);
             var ry = ch - iy;
             coordinates.push({
-                x: pta.x + diffx / cw * (ix + .5) - diffy / cw * (ry + .5),
-                y: pta.y + diffy / cw * (ix + .5) + diffx / cw * (ry + .5)
+                x: pta.x + diffx / cw * (ix + 0.5) - diffy / cw * (ry + 0.5),
+                y: pta.y + diffy / cw * (ix + 0.5) + diffx / cw * (ry + 0.5)
             });
         }
     }
@@ -812,4 +812,12 @@ evaluator.cpucolorplot$4 = function(args, modifs) {
     image.generation++;
 
     return nada;
+};
+
+evaluator.cpucolorplot$2 = function(args, modifs) {
+    var screen = evaluator.screen$0().value[0];
+    var ll = List.realVector([screen[1].X, screen[1].Y]);
+    var lr = List.realVector([screen[2].X, screen[2].Y]);
+    console.log(ll);
+    return evaluator.cpucolorplot$4([ll, lr, args[0], args[1]], modifs);
 };
