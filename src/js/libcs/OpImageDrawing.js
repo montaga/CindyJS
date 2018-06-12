@@ -742,6 +742,62 @@ function computeimagedata(id, coordinates, prog) {
     return id;
 }
 
+evaluator.cpucolorplot$3 = function(args, modifs) {
+    var a = evaluateAndVal(args[1]);
+    var b = evaluateAndVal(args[2]);
+    var prog = args[0];
+    var pta = eval_helper.extractPoint(a);
+    var ptb = eval_helper.extractPoint(b);
+
+    if (!pta.ok || !ptb.ok) {
+        return nada;
+    }
+
+    //convert to pixel coordinates
+    var ptap = csport.from(pta.x, pta.y, 1);
+    var ptbp = csport.from(ptb.x, ptb.y, 1);
+
+    function snaptointeger(vec2) {
+        return [Math.floor(vec2[0]), Math.ceil(vec2[1])];
+    }
+
+    var ulp = snaptointeger([Math.min(ptap[0], ptbp[0]), Math.min(ptap[1], ptbp[1])]); //upper left
+    var lrp = snaptointeger([Math.max(ptap[0], ptbp[0]), Math.max(ptap[1], ptbp[1])]); //lower right
+
+
+    ulp = (ulp);
+    lrp = snaptointeger(lrp);
+
+    var width = lrp[0] - ulp[0];
+    var height = lrp[1] - ulp[1];
+
+    if (width === 0 % height === 0) {
+        return nada;
+    }
+
+    function dehomog(vec3) {
+        return [vec3[0] / vec3[2], vec3[1] / vec3[2]];
+    }
+
+    var ul = dehomog(csport.to(ulp[0], ulp[1]));
+    var lr = dehomog(csport.to(lrp[0], lrp[1]));
+
+    var coordinates = [];
+    for (var iy = 0; iy < height; iy++) {
+        for (var ix = 0; ix < width; ix++) {
+            coordinates.push({
+                x: ul[0] + (lr[0] - ul[0]) * (ix + 0.5) / width,
+                y: ul[1] + (lr[1] - ul[1]) * (iy + 0.5) / height
+            });
+        }
+    }
+
+    var id = computeimagedata(csctx.createImageData(width, height), coordinates, args[0]);
+    csctx.putImageData(id, ulp[0], ulp[1]);
+
+    return nada;
+};
+
 evaluator.cpucolorplot$1 = function(args, modifs) {
     var iw = canvas.width; //internal measures. might be twice as csw on HiDPI-Displays
     var ih = canvas.height;
