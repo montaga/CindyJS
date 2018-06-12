@@ -802,17 +802,16 @@ evaluator.cpucolorplot$1 = function(args, modifs) {
     var iw = canvas.width; //internal measures. might be twice as csw on HiDPI-Displays
     var ih = canvas.height;
 
-    var screen = evaluator.screen$0().value[0];
-    var ul = screen[0];
-    var lr = screen[2];
+    var ul = csport.to(0, 0);
+    var lr = csport.to(csw, csh);
 
     var coordinates = [];
     for (var iy = 0; iy < ih; iy++) {
         for (var ix = 0; ix < iw; ix++) {
             //var pidx = (iy * iw + ix);
             coordinates.push({
-                x: ul.X + (lr.X - ul.X) * (ix + 0.5) / iw,
-                y: ul.Y + (lr.Y - ul.Y) * (iy + 0.5) / ih
+                x: ul[0] + (lr[0] - ul[0]) * (ix + 0.5) / iw,
+                y: ul[1] + (lr[1] - ul[1]) * (iy + 0.5) / ih
             });
         }
     }
@@ -871,9 +870,7 @@ evaluator.cpucolorplot$4 = function(args, modifs) {
 };
 
 evaluator.cpucolorplot$2 = function(args, modifs) {
-    var screen = evaluator.screen$0().value[0];
-    var ll = List.realVector([screen[1].X, screen[1].Y]);
-    var lr = List.realVector([screen[2].X, screen[2].Y]);
-    console.log(ll);
+    var ll = List.realVector(csport.to(0, csh));
+    var lr = List.realVector(csport.to(csw, csh));
     return evaluator.cpucolorplot$4([ll, lr, args[0], args[1]], modifs);
 };

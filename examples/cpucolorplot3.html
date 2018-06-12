@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+    <title>Cindy JS</title>
+    <script type="text/javascript" src="../build/js/Cindy.js"></script>
+  </head>
+    
+	<body style="font-family:Arial;">
+    
+    <h1>CindyJS: cpucolorplot3</h1>
+
+
+    <script id="csdraw" type="text/x-cindyscript">
+      cpucolorplot(sin(#*#), A, B);
+		</script>
+		<div  id="CSCanvas" style="width:100px; height:50px; border:2px solid #000000"></div>
+		
+		<script type="text/javascript">
+				
+				var gslp=[
+									{name:"A", kind:"P", type:"Free", pos:[-9,-4]},
+									{name:"B", kind:"P", type:"Free", pos:[8,4]},
+									];
+				CindyJS({canvasname:"CSCanvas",
+										scripts: "cs*",
+										geometry:gslp,
+										csconsole: true,
+										ports: [{
+											id: "CSCanvas",
+											width: 200,
+											height: 100,
+											transform: [ { visibleRect: [ -10, -5, 10, 5 ] } ]
+										}]
+									});
+    </script>             
+	</body>
+</html>

@@ -12,10 +12,11 @@
 
 		<script id="csinit" type="text/x-cindyscript">
 			createimage("plot", 100,50);
-			cpucolorplot(A, B, "plot", sin(#*#));
+			
 		</script>
 
-    <script id="csdraw" type="text/x-cindyscript">
+    <script id="csmove" type="text/x-cindyscript">
+			cpucolorplot(A, B, "plot", sin(#*#));
       drawimage(A, B, "plot");
 		</script>
 		<div  id="CSCanvas" style="width:600px; height:600px; border:2px solid #000000"></div>
