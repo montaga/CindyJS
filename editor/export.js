@@ -10,9 +10,10 @@ var Export = {
       <div>
         <h5>Export to file</h5>
         <!--<button type="button" id="button-export-pdf">PDF</button>
-        <button type="button" id="button-export-svg">SVG</button>
+        
         <button type="button" id="button-export-html">HTML</button>-->
         <button type="button" id="button-export-html">Export HTML-File</button>
+        <button type="button" id="button-export-svg">SVG</button>
       </div>
       <h5>Export to URL</h5>
       <div>
@@ -32,10 +33,11 @@ var Export = {
     document.getElementById('button-export-pdf').onclick = function() {
       cdy.exportPDF();
     };
+    */
     document.getElementById('button-export-svg').onclick = function() {
       cdy.exportSVG();
     };
-    */
+    
 
     document.getElementById('button-export-html').onclick = function() {
       Export.buildhtml();

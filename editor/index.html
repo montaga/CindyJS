@@ -69,8 +69,27 @@
         transform: [{
           visibleRect: [-5, -5, 5, 5]
         }],
-        background: "rgb(168,176,192)"
+        
+        //grid: 1,
+        //background: "rgba(255,255,255,1)"
       }],
+      //snap: true,
+      defaultAppearance: {
+        clip: "none",
+        pointColor: [.9,.9,.9],
+        lineColor: [0,0,0],
+        pointSize: 5,
+        lineSize: 1,
+        alpha: 1,
+        overhangLine: 1,
+        overhangSeg: 1,
+        dimDependent: 1,
+        fontFamily: "sans-serif",
+        textsize: 20,
+        lineHeight: 1.45
+      },
+      
+
       csconsole: false,
       use: ["CindyGL", "dimensions", "geometryeditor", "inspector", "visiblerect", "user"],
       autoplay: true,
