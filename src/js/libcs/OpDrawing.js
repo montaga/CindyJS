@@ -916,7 +916,9 @@ function defaultTextRendererCanvas(ctx, text, x, y, align, size, lineHeight) {
         };
     }
     var m = ctx.measureText(text);
-    ctx.fillText(text, x - m.width * align, y);
+    
+    ctx.textAlign = align==0 ? "left" : (align==1 ? "right" : "center"); 
+    ctx.fillText(text, x, y);
     // We can't rely on advanced text metrics due to lack of browser support,
     // so we have to guess sizes, the vertical ones in particular.
     return {
